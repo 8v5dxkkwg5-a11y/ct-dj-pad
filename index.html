@@ -120,7 +120,7 @@
       border: 2px solid transparent;
       background: linear-gradient(#000, #000) padding-box,
                   linear-gradient(45deg, #ff0000, #00ff00, #0000ff, #ff0000) border-box;
-      background-size: 100%, 400%;
+      background-size: 100%, 400%; /* 第一層100%確保黑底，第二層400%做流光 */
       animation: rgbFlow 10s linear infinite;
       color: #fff; font-size: 1.2rem; font-weight: bold;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
@@ -145,7 +145,7 @@
       backdrop-filter: blur(20px);
       position: relative;
       width: 100%;
-      max-width: 600px;
+      max-width: 700px;
       box-sizing: border-box;
       z-index: 10;
     }
@@ -250,15 +250,17 @@
       animation: hueCycle 5s infinite linear;
     }
 
-    /* --- 4. Pad 網格佈局 --- */
+    /* --- 4. Pad 網格佈局 (5x5) --- */
     .grid-container {
       display: flex; align-items: center; justify-content: center;
       padding: 0 10px 20px 10px; width: 100%; box-sizing: border-box; perspective: 1000px;
     }
 
     .grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
-      width: 100%; max-width: 600px; aspect-ratio: 1/1;
+      display: grid; 
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      width: 100%; max-width: 650px; aspect-ratio: 1/1;
       transform-style: preserve-3d;
     }
 
@@ -266,7 +268,7 @@
     .pad {
       background: rgba(30, 30, 40, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
+      border-radius: 12px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; position: relative; overflow: hidden;
       touch-action: none; -webkit-tap-highlight-color: transparent;
@@ -277,13 +279,14 @@
     }
 
     .pad strong {
-      font-size: 2rem; pointer-events: none; z-index: 2;
+      font-size: 1.5rem;
+      pointer-events: none; z-index: 2;
       color: rgba(255,255,255,0.5);
       font-family: 'Courier New', monospace;
       transition: color 0.1s, text-shadow 0.1s;
     }
     .pad-label {
-      font-size: 0.75rem; margin-top: 5px; z-index: 2;
+      font-size: 0.7rem; margin-top: 3px; z-index: 2;
       color: rgba(255,255,255,0.4); pointer-events: none;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;
       text-transform: uppercase; letter-spacing: 1px;
@@ -384,8 +387,8 @@
 
     @media (max-width: 600px) {
       body { padding: 10px 0; }
-      .grid { gap: 10px; }
-      .pad strong { font-size: 1.5rem; }
+      .grid { gap: 8px; }
+      .pad strong { font-size: 1.2rem; }
       .control-block { min-width: 100%; }
       h1 { font-size: 1.5rem; margin-bottom: 15px; }
       .panel { padding: 15px; margin: 0 10px 15px 10px; }
@@ -420,11 +423,11 @@
         </div>
         <input type="range" id="volume" min="0" max="100" value="80">
         <div class="presets">
-          <button class="preset-btn" onclick="updateVolume(0)">MUTE (0)</button>
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE(0)</button>
           <button class="preset-btn" onclick="updateVolume(30)">30</button>
           <button class="preset-btn" onclick="updateVolume(50)">50</button>
           <button class="preset-btn" onclick="updateVolume(80)">80</button>
-          <button class="preset-btn" onclick="updateVolume(100)">MAX (100)</button>
+          <button class="preset-btn" onclick="updateVolume(100)">MAX(100)</button>
         </div>
       </div>
 
@@ -466,13 +469,24 @@
   <div class="hint">💡 TIP: MULTI-TOUCH / 提示：支援多重音效</div>
 
   <script>
-    const PAD_KEYS = ["1","2","3","4","A","C","D","E","F","Q","R","S","V","W","X","Z"];
-    const DEFAULT_FILES = [
-      "1_親愛的.mp3", "2_示意停車.mp3", "3_去洪幹幹欸.mp3", "4_DAMN.mp3",
-      "A_For Elise(Oiiai).mp3", "C_Dj Airhorn.mp3", "D_星期五晚上.mp3", "E_黑黑黑黑.mp3",
-      "F_請支援收銀.mp3", "Q_John Cena.mp3", "R_阿珍愛上了阿強.mp3", "S_上車舞BGM.mp3",
-      "V_前方車輛請向右避讓.mp3", "W_王老先生有塊地.mp3", "X_Airhorn.mp3", "Z_新幹線エアホーン.mp3"
+    // --- 配置常數 (25 鍵) ---
+    const PAD_KEYS = [
+      "1","2","3","4","5",
+      "Q","W","E","R","T",
+      "A","S","D","F","G",
+      "Z","X","C","V","B",
+      "6","7","8","9","0"
     ];
+    
+    // 預設檔案 (原有的16個 + 9個空位)
+    const DEFAULT_FILES = [
+      "1_親愛的.mp3", "2_示意停車.mp3", "3_去洪幹幹欸.mp3", "4_DAMN.mp3", "Empty.mp3",
+      "A_For Elise(Oiiai).mp3", "C_Dj Airhorn.mp3", "D_星期五晚上.mp3", "E_黑黑黑黑.mp3", "Empty.mp3",
+      "F_請支援收銀.mp3", "Q_John Cena.mp3", "R_阿珍愛上了阿強.mp3", "S_上車舞BGM.mp3", "Empty.mp3",
+      "V_前方車輛請向右避讓.mp3", "W_王老先生有塊地.mp3", "X_Airhorn.mp3", "Z_新幹線エアホーン.mp3", "Empty.mp3",
+      "Empty.mp3", "Empty.mp3", "Empty.mp3", "Empty.mp3", "Empty.mp3"
+    ];
+
     const AUDIO_PATH = "audio/";
     const LOAD_TIMEOUT = 8000;
 
@@ -494,7 +508,7 @@
     const blobUrls = {};
 
     function getPadLabel(fname) {
-      if (!fname) return "EMPTY";
+      if (!fname || fname === "Empty.mp3") return "EMPTY";
       try { fname = decodeURIComponent(fname); } catch(e){}
       const match = fname.match(/_(.+)\.\w+$/);
       return match ? match[1] : fname.replace(/\.\w+$/, '');
@@ -502,15 +516,15 @@
 
     function safeSetPointerCapture(el, id) {
       try { 
-        if (el.hasPointerCapture && el.hasPointerCapture(id)) return; 
-        if (el.setPointerCapture) el.setPointerCapture(id); 
+        if (el.hasPointerCapture?.(id)) return; 
+        el.setPointerCapture?.(id); 
       } catch(e){}
     }
     
     function safeReleasePointerCapture(el, id) {
       try { 
-        if (el.hasPointerCapture && !el.hasPointerCapture(id)) return; 
-        if (el.releasePointerCapture) el.releasePointerCapture(id); 
+        if (!el.hasPointerCapture?.(id)) return; 
+        el.releasePointerCapture?.(id); 
       } catch(e){}
     }
 
@@ -543,6 +557,7 @@
       element.appendChild(circle);
     }
 
+    // --- 背景粒子生成 (RGB 隨機色) ---
     function initParticles() {
       const container = document.getElementById('particles-container');
       const particleCount = 60;
@@ -573,6 +588,7 @@
       }
     }
 
+    // --- 隨機 Spotlight 循環 (含 RGB 隨機變色) ---
     function autoSpotlightLoop() {
       if (!isInitialized) return;
 
@@ -626,11 +642,19 @@
     async function preloadAudios() {
       const loadingEl = document.getElementById('loading');
       let loadedCount = 0;
-      const total = DEFAULT_FILES.length;
+      const total = PAD_KEYS.length;
 
-      const promises = DEFAULT_FILES.map((file, idx) => {
+      const promises = PAD_KEYS.map((key, idx) => {
         return new Promise((resolve) => {
-          const key = PAD_KEYS[idx];
+          const file = DEFAULT_FILES[idx];
+          if (!file || file === "Empty.mp3") {
+              preloadedAudios[key] = null;
+              loadedCount++;
+              loadingEl.textContent = `SYSTEM LOADING... ${Math.floor((loadedCount / total) * 100)}%`;
+              resolve();
+              return;
+          }
+
           const audio = new Audio();
           let completed = false;
           let timeoutId;
