@@ -2,24 +2,119 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>🎵 Web DJ Pad 🎵</title>
   <style>
-    body {background: #1a1a2e; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0;}
-    h1 {text-align: center; color: #00d4ff; margin-top: 32px;}
-    .panel {display: flex; justify-content: center; gap: 36px; margin: 24px 0;}
-    .panel label {display:inline-flex;align-items:center;gap:8px;}
-    .grid {display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; max-width: 600px; margin: 0 auto;}
-    .pad {background:linear-gradient(145deg,#2a2a3a,#1a1a2a); border-radius:18px; min-height:90px; display:flex;flex-direction:column;align-items:center; justify-content:center; cursor:pointer; font-size:1.4rem; user-select:none; box-shadow:0 8px 25px rgba(0,0,0,0.3); transition:.2s;}
-    .pad:active {background:linear-gradient(145deg,#00d4ff,#ff4081);}
-    .pad-label {font-size:1rem; margin-top:4px;}
-    .mode-btn {padding:8px 18px; border:none; border-radius:12px; margin:0 2px; cursor:pointer; background:#222; color:#eee;}
-    .mode-btn.active {background:linear-gradient(45deg,#00d4ff,#ff4081); color:#fff;}
-    .volume-slider {width:120px;}
+    /* 基礎設定 */
+    body {
+      background: #1a1a2e; 
+      color: #fff; 
+      font-family: 'Segoe UI', system-ui, sans-serif; 
+      margin: 0;
+      user-select: none; 
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+
+    h1 {text-align: center; color: #00d4ff; margin-top: 32px; font-weight: 700;}
+    
+    .panel {display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; margin: 24px 0; padding: 0 10px;}
+    .panel label {display:inline-flex; align-items:center; gap:8px; font-size: 1.1rem;}
+    
+    .grid {
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr); 
+      gap: 16px; 
+      max-width: 600px; 
+      margin: 0 auto; 
+      padding: 10px;
+    }
+
+    .pad {
+      background: linear-gradient(145deg, #2a2a3a, #1a1a2a); 
+      border-radius: 16px; 
+      aspect-ratio: 1/1;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      cursor: pointer; 
+      font-size: 1.5rem; 
+      box-shadow: 0 6px 15px rgba(0,0,0,0.4); 
+      transition: transform 0.1s, background 0.1s, box-shadow 0.1s;
+      position: relative;
+      overflow: hidden;
+      touch-action: none; 
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pad:active { transform: scale(0.92); }
+    
+    .pad.active {
+      background: linear-gradient(145deg, #00d4ff, #ff4081); 
+      transform: scale(0.95);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+      color: #fff;
+    }
+
+    .pad.error {
+      background: linear-gradient(145deg, #ff4444, #cc0000);
+      animation: shake 0.3s ease-in-out;
+    }
+
+    .pad strong { font-size: 1.8rem; pointer-events: none; }
+    .pad-label { 
+      font-size: 0.9rem; 
+      margin-top: 6px; 
+      opacity: 0.8; 
+      pointer-events: none; 
+      text-align: center;
+      padding: 0 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .mode-btn {
+      padding: 8px 16px; 
+      border: 1px solid #444; 
+      border-radius: 20px; 
+      margin: 0 4px; 
+      cursor: pointer; 
+      background: #222; 
+      color: #aaa;
+      transition: all 0.2s;
+    }
+    .mode-btn:hover { background: #333; }
+    .mode-btn.active {
+      background: linear-gradient(45deg, #00d4ff, #ff4081); 
+      color: #fff; 
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+    }
+
+    .volume-slider { width: 120px; accent-color: #00d4ff; cursor: pointer; }
+    
+    .loading { text-align: center; margin: 20px; color: #00d4ff; font-weight: bold; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    @media (max-width: 500px) {
+      .grid { gap: 10px; }
+      .pad strong { font-size: 1.4rem; }
+      .pad-label { font-size: 0.75rem; }
+    }
   </style>
 </head>
 <body>
+
   <h1>🎵 Web DJ Pad 🎵</h1>
+  
   <div class="panel">
     <label>🔊 音量 <input type="range" id="volume" class="volume-slider" min="0" max="100" value="80"></label>
     <label>模式
@@ -28,84 +123,244 @@
       <button class="mode-btn" data-mode="oneshot">單次</button>
     </label>
   </div>
+
+  <div id="loading" class="loading">正在預載入音效...</div>
+  
   <div class="grid" id="padGrid"></div>
+
   <script>
-    // Pad 鍵順 & 檔名順序必須對齊
-    const padKeys = ["1","2","3","4","A","C","D","E","F","Q","R","S","V","W","X","Z"];
-    const soundFiles = [
-      "1_親愛的.mp3",
-      "2_示意停車.mp3",
-      "3_去洪幹幹欸.mp3",
-      "4_DAMN.mp3",
-      "A_For Elise(Oiiai).mp3",
-      "C_Dj Airhorn.mp3",
-      "D_星期五晚上.mp3",
-      "E_黑黑黑黑.mp3",
-      "F_請支援收銀.mp3",
-      "Q_John Cena.mp3",
-      "R_阿珍愛上了阿強.mp3",
-      "S_Young Black&Rich.mp3",
-      "V_前方車輛請向右避讓.mp3",
-      "W_王老先生有塊地.mp3",
-      "X_Airhorn.mp3",
-      "Z_新幹線エアホーン.mp3"
+    // --- 配置常數 ---
+    const PAD_KEYS = ["1","2","3","4","A","C","D","E","F","Q","R","S","V","W","X","Z"];
+    const SOUND_FILES = [
+      "1_親愛的.mp3", "2_示意停車.mp3", "3_去洪幹幹欸.mp3", "4_DAMN.mp3",
+      "A_For Elise(Oiiai).mp3", "C_Dj Airhorn.mp3", "D_星期五晚上.mp3", "E_黑黑黑黑.mp3",
+      "F_請支援收銀.mp3", "Q_John Cena.mp3", "R_阿珍愛上了阿強.mp3", "S_Young Black&Rich.mp3",
+      "V_前方車輛請向右避讓.mp3", "W_王老先生有塊地.mp3", "X_Airhorn.mp3", "Z_新幹線エアホーン.mp3"
     ];
+    const AUDIO_PATH = "audio/";
+
+    // --- 全域狀態 ---
+    let playMode = "normal";
+    let volume = 0.8;
+    const activeAudios = {};
+    const preloadedAudios = {};
+    const padElements = {};
+    const pressedKeys = new Set();
+
+    // --- 工具函數 ---
     function getPadLabel(fname) {
-      let m = fname.match(/_(.+)\.\w+$/);
-      return m ? m[1] : fname.replace(/\.\w+$/, '');
+      const match = fname.match(/_(.+)\.\w+$/);
+      return match ? match[1] : fname.replace(/\.\w+$/, '');
     }
-    let playMode = "normal", volume = 0.8, activeAudios = {};
-    document.getElementById('volume').oninput = e => volume = e.target.value / 100;
+
+    // [優化] 使用可選鏈確保最大相容性
+    function safeSetPointerCapture(element, pointerId) {
+      try {
+        if (element.hasPointerCapture?.(pointerId)) return;
+        element.setPointerCapture?.(pointerId);
+      } catch (e) {
+        // 靜默處理異常
+      }
+    }
+
+    function safeReleasePointerCapture(element, pointerId) {
+      try {
+        if (!element.hasPointerCapture?.(pointerId)) return;
+        element.releasePointerCapture?.(pointerId);
+      } catch (e) {
+        // 靜默處理異常
+      }
+    }
+
+    // --- 核心功能：預載入音頻 ---
+    async function preloadAudios() {
+      const loadingEl = document.getElementById('loading');
+      let loadedCount = 0;
+      const total = SOUND_FILES.length;
+
+      const promises = SOUND_FILES.map((file, idx) => {
+        return new Promise((resolve) => {
+          const key = PAD_KEYS[idx];
+          const audio = new Audio();
+          
+          const handleLoad = () => {
+            preloadedAudios[key] = audio;
+            updateProgress();
+            resolve();
+          };
+
+          const handleError = () => {
+            console.warn(`⚠️ 無法載入音頻: ${file}`);
+            updateProgress();
+            resolve();
+          };
+
+          audio.addEventListener('canplaythrough', handleLoad, { once: true });
+          audio.addEventListener('error', handleError, { once: true });
+
+          audio.src = AUDIO_PATH + file;
+          audio.preload = 'auto';
+          audio.load();
+        });
+      });
+
+      function updateProgress() {
+        loadedCount++;
+        loadingEl.textContent = `載入中... ${Math.floor((loadedCount / total) * 100)}%`;
+      }
+
+      await Promise.all(promises);
+      loadingEl.style.display = 'none';
+      console.log("✅ 音效載入完成");
+    }
+
+    // --- 播放邏輯 ---
+    function playPad(key) {
+      const pad = padElements[key];
+      if (!pad) return;
+
+      if (!preloadedAudios[key]) {
+        console.error(`❌ 音頻 ${key} 未就緒或檔案遺失`);
+        triggerVisualError(pad);
+        return;
+      }
+
+      if (playMode === "oneshot") {
+        stopAllPads();
+      }
+
+      if (playMode === "loop" && activeAudios[key]) {
+        stopPad(key);
+        return;
+      }
+
+      stopPad(key);
+
+      const sourceAudio = preloadedAudios[key];
+      const audio = sourceAudio.cloneNode();
+      audio.volume = volume;
+      audio.loop = (playMode === "loop");
+
+      audio.onended = () => {
+        pad.classList.remove('active');
+        delete activeAudios[key];
+      };
+
+      // 先註冊狀態，確保停止功能不會遺漏
+      activeAudios[key] = audio;
+      pad.classList.add('active');
+
+      // 播放並處理可能的失敗
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.error(`❌ 播放失敗: ${key}`, err);
+          pad.classList.remove('active');
+          delete activeAudios[key];
+          triggerVisualError(pad);
+        });
+      }
+    }
+
+    function stopPad(key) {
+      const audio = activeAudios[key];
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        delete activeAudios[key];
+      }
+      padElements[key]?.classList.remove('active');
+    }
+
+    function stopAllPads() {
+      Object.keys(activeAudios).forEach(stopPad);
+    }
+
+    function triggerVisualError(pad) {
+      pad.classList.add('error');
+      setTimeout(() => pad.classList.remove('error'), 300);
+    }
+
+    // --- UI 初始化與事件 ---
+    const padGrid = document.getElementById('padGrid');
+    
+    PAD_KEYS.forEach((key, idx) => {
+      const fname = SOUND_FILES[idx];
+      const pad = document.createElement('div');
+      
+      pad.className = "pad";
+      pad.innerHTML = `<strong>${key}</strong><div class="pad-label">${getPadLabel(fname)}</div>`;
+      pad.setAttribute('role', 'button');
+      pad.setAttribute('aria-label', `播放音效 ${key}`);
+      pad.tabIndex = 0;
+
+      pad.onpointerdown = (e) => {
+        e.preventDefault();
+        safeSetPointerCapture(pad, e.pointerId);
+        playPad(key);
+      };
+
+      pad.onpointerup = (e) => {
+        safeReleasePointerCapture(pad, e.pointerId);
+      };
+
+      pad.onpointercancel = (e) => {
+        safeReleasePointerCapture(pad, e.pointerId);
+      };
+
+      padGrid.appendChild(pad);
+      padElements[key] = pad;
+    });
+
+    // --- 控制面板事件 ---
+    document.getElementById('volume').oninput = (e) => {
+      volume = e.target.value / 100;
+      Object.values(activeAudios).forEach(audio => audio.volume = volume);
+    };
+
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         playMode = btn.dataset.mode;
-      }
+        if (playMode === 'oneshot') stopAllPads();
+      };
     });
-    const padGrid = document.getElementById('padGrid');
-    padKeys.forEach((key, idx) => {
-      const fname = soundFiles[idx];
-      const pad = document.createElement('div');
-      pad.className = "pad";
-      pad.tabIndex = 0;
-      pad.innerHTML = `<strong>${key}</strong><div class="pad-label">${getPadLabel(fname)}</div>`;
-      pad.onclick = () => playPad(key, 'audio/' + fname, idx);
-      padGrid.appendChild(pad);
-    });
-    function playPad(key, file, idx){
-      if(playMode==="oneshot") stopAllPads();
-      if(playMode==="loop" && activeAudios[key]){
-        stopPad(key); return;
-      }
-      stopPad(key);
-      const pad = padGrid.children[idx];
-      pad.classList.add('active');
-      const audio = new Audio(file);
-      audio.volume = volume;
-      audio.onended = () => { pad.classList.remove('active'); delete activeAudios[key];};
-      if(playMode==="loop") audio.loop = true;
-      activeAudios[key]=audio;
-      audio.play();
-    }
-    function stopPad(key){
-      if(activeAudios[key]){
-        activeAudios[key].pause();
-        activeAudios[key].currentTime = 0;
-        delete activeAudios[key];
-      }
-      Array.from(padGrid.children).forEach(pad=>{
-        if(pad.querySelector("strong").textContent===key) pad.classList.remove('active');
-      });
-    }
-    function stopAllPads(){ Object.keys(activeAudios).forEach(stopPad);}
-    document.addEventListener('keydown', e=>{
+
+    // --- 鍵盤事件 ---
+    document.addEventListener('keydown', (e) => {
+      if (e.isComposing || e.keyCode === 229) return;
+      if (["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+
       const key = e.key.toUpperCase();
-      const idx = padKeys.indexOf(key);
-      if(idx>=0) playPad(key, 'audio/' + soundFiles[idx], idx);
-      if(e.code==="Space") stopAllPads();
-      if(idx>=0 && (e.ctrlKey||e.metaKey)) stopPad(key);
+
+      if (pressedKeys.has(key)) return;
+      pressedKeys.add(key);
+
+      if (PAD_KEYS.includes(key)) {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          stopPad(key);
+        } else {
+          playPad(key);
+        }
+      } else if (e.code === "Space") {
+        e.preventDefault();
+        stopAllPads();
+      }
     });
+
+    document.addEventListener('keyup', (e) => {
+      const key = e.key.toUpperCase();
+      pressedKeys.delete(key);
+    });
+
+    window.addEventListener('blur', () => {
+      pressedKeys.clear();
+    });
+
+    // 啟動
+    preloadAudios();
   </script>
 </body>
 </html>
