@@ -191,7 +191,7 @@
   <div id="startOverlay">
     <h2>🎵 Web DJ Pad 🎵</h2>
     <button class="start-btn">點擊開始 / Click to Start</button>
-    <p style="margin-top:20px; opacity:0.6; font-size:0.9rem; color:#aaa;">支援拖曳檔案更換音效 (Drag & Drop Supported)</p>
+    <p style="margin-top:20px; opacity:0.6; font-size:0.9rem; color:#aaa;">支援多重音效疊加 (Polyphony Mode)</p>
   </div>
 
   <h1>🎵 Web DJ Pad 🎵</h1>
@@ -221,7 +221,7 @@
     <div class="grid" id="padGrid"></div>
   </div>
   
-  <div class="hint">💡 提示：將 MP3/WAV 檔案拖曳至格子即可更換音效</div>
+  <div class="hint">💡 提示：支援連續點擊播放 (Polyphony)，將檔案拖曳至格子可更換音效</div>
 
   <script>
     // --- 配置常數 ---
@@ -241,14 +241,18 @@
       playbackRate: 1.0
     };
     let isInitialized = false;
-    let saveSettingsTimer = null; // [新增] 防抖計時器
+    let saveSettingsTimer = null;
 
-    const activeAudios = {};
+    // activeAudios 僅追蹤該按鍵"最新/活躍"的一個實例 (用於 UI 綁定)
+    const activeAudios = {}; 
+    // runningSounds 追蹤"所有"正在發聲的實例
+    const runningSounds = new Set();
+    
     const preloadedAudios = {};
     const padElements = {};
     const pressedKeys = new Set();
     const progressAnimationIds = {};
-    const blobUrls = {}; // [新增] 追蹤 Blob URLs 以便釋放
+    const blobUrls = {};
 
     // --- 工具函數 ---
     function getPadLabel(fname) {
@@ -284,7 +288,6 @@
       }
     }
 
-    // [修正] 加入防抖動，避免頻繁寫入 localStorage
     function saveSettings() {
       clearTimeout(saveSettingsTimer);
       saveSettingsTimer = setTimeout(() => {
@@ -302,7 +305,7 @@
         return new Promise((resolve) => {
           const key = PAD_KEYS[idx];
           const audio = new Audio();
-           
+            
           const done = () => {
             loadedCount++;
             loadingEl.textContent = `載入中... ${Math.floor((loadedCount / total) * 100)}%`;
@@ -326,7 +329,35 @@
       loadingEl.style.display = 'none';
     }
 
-    // --- 3. 播放邏輯 ---
+    // --- 3. 獨立動畫控制 (關鍵優化) ---
+    function startProgressAnimation(key, audioInstance) {
+      // 如果有舊的動畫在跑，先取消，避免多重更新
+      if (progressAnimationIds[key]) {
+        cancelAnimationFrame(progressAnimationIds[key]);
+      }
+
+      const pad = padElements[key];
+      const progressBar = pad.querySelector('.progress-bar');
+
+      const update = () => {
+        // 安全檢查：如果這個 audio 已經不是 UI 綁定的對象，就停止更新
+        if (activeAudios[key] !== audioInstance) return;
+
+        // 嚴謹的 Duration 檢查
+        if (audioInstance.duration && Number.isFinite(audioInstance.duration)) {
+          const pct = (audioInstance.currentTime / audioInstance.duration) * 100;
+          progressBar.style.width = `${pct}%`;
+        }
+
+        if (!audioInstance.paused && !audioInstance.ended) {
+          progressAnimationIds[key] = requestAnimationFrame(update);
+        }
+      };
+
+      progressAnimationIds[key] = requestAnimationFrame(update);
+    }
+
+    // --- 4. 播放邏輯 ---
     function playPad(key) {
       if (!isInitialized) return;
 
@@ -338,43 +369,60 @@
         return;
       }
 
-      if (appState.mode === "oneshot") stopAllPads();
-      if (appState.mode === "loop" && activeAudios[key]) {
-        stopPad(key);
-        return;
-      }
-
-      stopPad(key);
+      // 模式邏輯
+      if (appState.mode === "oneshot") {
+        stopAllPads(); 
+      } else if (appState.mode === "loop") {
+        if (activeAudios[key]) {
+          stopPad(key); // Toggle 停止
+          return;
+        }
+      } 
+      // 標準模式：直接通過，不呼叫 stopPad
 
       const sourceAudio = preloadedAudios[key];
       if (!sourceAudio || !sourceAudio.src) { triggerVisualError(pad); return; }
 
+      // 建立實例
       const audio = sourceAudio.cloneNode();
       audio.volume = appState.volume;
       audio.playbackRate = appState.playbackRate;
       audio.loop = (appState.mode === "loop");
+      audio._padKey = key;
 
-      // 進度條動畫
-      const progressBar = pad.querySelector('.progress-bar');
-      const updateProgress = () => {
-        if (!audio.duration) return;
-        const pct = (audio.currentTime / audio.duration) * 100;
-        progressBar.style.width = `${pct}%`;
-        if (!audio.paused && !audio.ended) {
-          progressAnimationIds[key] = requestAnimationFrame(updateProgress);
-        }
-      };
+      runningSounds.add(audio);
 
       audio.onended = () => {
-        pad.classList.remove('active');
-        if (progressAnimationIds[key]) {
-          cancelAnimationFrame(progressAnimationIds[key]);
-          delete progressAnimationIds[key];
+        runningSounds.delete(audio);
+        
+        // 檢查該按鍵是否還有其他殘存聲音
+        // Set 是按照插入順序排列的，轉換成 Array 後取最後一個通常是「最新」的
+        const remainingSounds = [...runningSounds].filter(a => a._padKey === key);
+
+        if (activeAudios[key] === audio) {
+          // 如果剛結束的這個是 UI 正在綁定的主控音頻
+          if (remainingSounds.length > 0) {
+            // 交棒給最後一個還在響的聲音
+            const nextAudio = remainingSounds[remainingSounds.length - 1];
+            activeAudios[key] = nextAudio;
+            startProgressAnimation(key, nextAudio);
+          } else {
+            // 真的沒聲音了，關閉 UI
+            delete activeAudios[key];
+            pad.classList.remove('active');
+            pad.querySelector('.progress-bar').style.width = '0%';
+            if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
+          }
+        } 
+        // 如果結束的不是主控音頻，且也沒有其他聲音了 (防呆)
+        else if (remainingSounds.length === 0) {
+           pad.classList.remove('active');
+           pad.querySelector('.progress-bar').style.width = '0%';
+           delete activeAudios[key];
         }
-        progressBar.style.width = '0%';
-        delete activeAudios[key];
       };
 
+      // 設置 UI 綁定
       activeAudios[key] = audio;
       pad.classList.add('active');
 
@@ -382,10 +430,14 @@
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            progressAnimationIds[key] = requestAnimationFrame(updateProgress);
+            // 【關鍵修正】確保在 promise resolve 時，這個 audio 還是 active 的
+            if (activeAudios[key] === audio) {
+              startProgressAnimation(key, audio);
+            }
           })
           .catch(err => {
             console.error(`播放失敗: ${key}`, err);
+            runningSounds.delete(audio);
             pad.classList.remove('active');
             delete activeAudios[key];
             triggerVisualError(pad);
@@ -394,12 +446,14 @@
     }
 
     function stopPad(key) {
-      const audio = activeAudios[key];
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        delete activeAudios[key];
-      }
+      // 停止該 Key 的"所有"聲音實例
+      runningSounds.forEach(audio => {
+        if (audio._padKey === key) {
+          audio.pause();
+          audio.currentTime = 0;
+          runningSounds.delete(audio);
+        }
+      });
       
       if (progressAnimationIds[key]) {
         cancelAnimationFrame(progressAnimationIds[key]);
@@ -411,10 +465,26 @@
         pad.classList.remove('active');
         pad.querySelector('.progress-bar').style.width = '0%';
       }
+      delete activeAudios[key];
     }
 
     function stopAllPads() {
-      Object.keys(activeAudios).forEach(stopPad);
+      runningSounds.forEach(audio => {
+          audio.pause();
+          audio.currentTime = 0;
+      });
+      runningSounds.clear();
+      
+      Object.keys(padElements).forEach(key => {
+        const pad = padElements[key];
+        if (pad) {
+            pad.classList.remove('active');
+            pad.querySelector('.progress-bar').style.width = '0%';
+        }
+        if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
+      });
+      
+      for (const key in activeAudios) delete activeAudios[key];
     }
 
     function triggerVisualError(pad) {
@@ -422,7 +492,7 @@
       setTimeout(() => pad.classList.remove('error'), 300);
     }
 
-    // --- 4. Drag & Drop (修正記憶體洩漏) ---
+    // --- 5. Drag & Drop ---
     function setupDragAndDrop(pad, key) {
       pad.ondragover = (e) => { e.preventDefault(); pad.classList.add('drag-over'); };
       pad.ondragleave = (e) => { e.preventDefault(); pad.classList.remove('drag-over'); };
@@ -433,22 +503,19 @@
 
         const file = e.dataTransfer.files[0];
         if (file && (file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|ogg|m4a)$/i))) {
-          // [修正] 先釋放舊的 Blob URL 防止記憶體洩漏
           if (blobUrls[key]) {
             URL.revokeObjectURL(blobUrls[key]);
             delete blobUrls[key];
           }
 
-          // 創建新的 Blob URL
           const objectUrl = URL.createObjectURL(file);
-          blobUrls[key] = objectUrl; // 追蹤 URL 以便後續釋放
+          blobUrls[key] = objectUrl;
           
           const newAudio = new Audio(objectUrl);
           newAudio.preload = 'auto';
           
           preloadedAudios[key] = newAudio;
           
-          // 更新 UI
           const labelEl = pad.querySelector('.pad-label');
           labelEl.textContent = file.name.replace(/\.\w+$/, '');
           labelEl.style.color = "#00d4ff";
@@ -461,7 +528,7 @@
       };
     }
 
-    // --- 5. DOM 初始化 ---
+    // --- 6. DOM 初始化 ---
     const padGrid = document.getElementById('padGrid');
     
     PAD_KEYS.forEach((key, idx) => {
@@ -493,19 +560,19 @@
       padElements[key] = pad;
     });
 
-    // --- 6. 事件監聽 ---
+    // --- 7. 事件監聽 ---
     document.getElementById('volume').oninput = (e) => {
       appState.volume = e.target.value / 100;
       document.getElementById('vol-val').textContent = Math.round(appState.volume * 100) + "%";
-      Object.values(activeAudios).forEach(audio => audio.volume = appState.volume);
-      saveSettings(); // 使用防抖動版本
+      runningSounds.forEach(audio => audio.volume = appState.volume);
+      saveSettings();
     };
 
     document.getElementById('pitch').oninput = (e) => {
       appState.playbackRate = parseFloat(e.target.value);
       document.getElementById('pitch-val').textContent = appState.playbackRate + "x";
-      Object.values(activeAudios).forEach(audio => audio.playbackRate = appState.playbackRate);
-      saveSettings(); // 使用防抖動版本
+      runningSounds.forEach(audio => audio.playbackRate = appState.playbackRate);
+      saveSettings();
     };
 
     document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -540,12 +607,11 @@
     document.addEventListener('keyup', (e) => pressedKeys.delete(e.key.toUpperCase()));
     window.addEventListener('blur', () => pressedKeys.clear());
 
-    // [新增] 頁面卸載時清理 Blob URLs
     window.addEventListener('beforeunload', () => {
       Object.values(blobUrls).forEach(url => URL.revokeObjectURL(url));
     });
 
-    // --- 7. 啟動程序 (修正 iOS 音頻解鎖) ---
+    // --- 8. 啟動程序 ---
     const overlay = document.getElementById('startOverlay');
     const startBtn = document.querySelector('.start-btn');
     
@@ -554,12 +620,11 @@
       overlay.style.opacity = '0';
       setTimeout(() => overlay.style.display = 'none', 500);
       
-      // [修正] 使用真實的靜音音頻數據來解鎖 iOS AudioContext
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
       silentAudio.play().then(() => {
         console.log("✅ 音頻系統已解鎖");
       }).catch(e => {
-        console.warn("⚠️ 音頻解鎖失敗（可能是舊瀏覽器）:", e);
+        console.warn("⚠️ 音頻解鎖失敗:", e);
       });
     };
 
