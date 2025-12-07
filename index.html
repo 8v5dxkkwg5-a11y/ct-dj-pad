@@ -38,4 +38,840 @@
       background-image: 
         linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-      background-size
+      background-size: 50px 50px;
+      transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+      animation: gridMove 20s linear infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @keyframes gridMove {
+      0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+      100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); }
+    }
+
+    h1 {
+      text-align: center;
+      color: #fff;
+      margin: 0 0 20px 0;
+      font-weight: 900;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px var(--neon-blue),
+        0 0 40px var(--neon-blue);
+      animation: titlePulse 2s infinite alternate;
+      z-index: 10;
+    }
+
+    @keyframes titlePulse {
+      0% { text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue); }
+      100% { text-shadow: 0 0 20px #fff, 0 0 40px var(--neon-blue), 0 0 80px var(--neon-purple); }
+    }
+
+    /* --- 2. 啟動遮罩 (Cyberpunk Style) --- */
+    #startOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s;
+    }
+    #startOverlay h2 { 
+      color: #fff; margin-bottom: 40px; font-size: 2.5rem; 
+      text-shadow: 0 0 20px var(--neon-pink);
+    }
+    .start-btn {
+      padding: 20px 60px; border-radius: 50px; border: 2px solid var(--neon-blue);
+      background: transparent;
+      color: var(--neon-blue); font-size: 1.2rem; font-weight: bold;
+      box-shadow: 0 0 15px var(--neon-blue), inset 0 0 15px var(--neon-blue);
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+    .start-btn:hover {
+      background: var(--neon-blue);
+      color: #000;
+      box-shadow: 0 0 50px var(--neon-blue);
+    }
+
+    /* --- 3. 控制面板 (Holographic Glass) --- */
+    .panel {
+      background: rgba(20, 20, 30, 0.6);
+      padding: 20px;
+      margin: 0 15px 20px 15px;
+      border-radius: 20px;
+      display: flex; flex-direction: column; gap: 20px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
+      z-index: 10;
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      box-sizing: border-box;
+    }
+    /* 裝飾線條 */
+    .panel::after {
+      content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 80%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+    }
+
+    .controls-row {
+      display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
+    }
+
+    .control-block {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px; border-radius: 15px;
+      display: flex; flex-direction: column; gap: 10px;
+      flex: 1; min-width: 250px;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.2s;
+    }
+    .control-block:hover { border-color: rgba(255,255,255,0.2); }
+
+    .block-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.85rem; color: var(--neon-blue); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .value-adjuster { display: flex; align-items: center; gap: 10px; }
+
+    .val-input {
+      background: rgba(0,0,0,0.5); border: 1px solid var(--neon-blue);
+      color: #fff; width: 50px; text-align: center; border-radius: 5px;
+      padding: 4px; font-weight: bold; font-family: monospace;
+      box-shadow: 0 0 5px var(--neon-blue);
+    }
+
+    .adj-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid var(--neon-blue); background: rgba(0, 243, 255, 0.1);
+      color: var(--neon-blue); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .adj-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
+
+    /* 霓虹滑桿 */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      background: #333; border-radius: 3px; outline: none; margin: 10px 0;
+      box-shadow: inset 0 0 5px #000;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: #fff; cursor: pointer;
+      box-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink);
+      transition: transform 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .presets { display: flex; gap: 5px; justify-content: space-between; }
+    .preset-btn {
+      flex: 1; padding: 6px 0; font-size: 0.65rem;
+      background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px; color: #aaa; cursor: pointer; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .preset-btn:hover { border-color: var(--neon-blue); color: #fff; box-shadow: 0 0 5px var(--neon-blue); }
+
+    /* 模式按鈕 */
+    .mode-container { display: flex; justify-content: center; gap: 15px; margin-top: 5px; }
+    .mode-btn {
+      padding: 10px 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 30px;
+      cursor: pointer; background: rgba(0,0,0,0.3); color: #ccc; font-weight: bold; font-size: 0.8rem;
+      transition: all 0.3s; flex: 1; max-width: 150px;
+      position: relative; overflow: hidden; text-align: center;
+    }
+    .mode-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .mode-btn.active {
+      border-color: var(--neon-pink);
+      color: #fff;
+      background: rgba(255, 0, 255, 0.1);
+      box-shadow: 0 0 15px var(--neon-pink), inset 0 0 10px var(--neon-pink);
+    }
+
+    /* --- 4. Pad 網格佈局 --- */
+    .grid-container {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 10px 20px 10px; width: 100%; box-sizing: border-box; perspective: 1000px;
+    }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
+      width: 100%; max-width: 600px; aspect-ratio: 1/1;
+      transform-style: preserve-3d;
+    }
+
+    /* --- 5. Pad 本體 (Cyberpunk Style) --- */
+    .pad {
+      background: rgba(30, 30, 40, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; overflow: hidden;
+      touch-action: none; -webkit-tap-highlight-color: transparent;
+      box-shadow: 
+        0 4px 6px rgba(0,0,0,0.3), 
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        inset 0 0 20px rgba(0,0,0,0.5);
+      transition: all 0.1s;
+    }
+
+    /* Pad 內部發光字體 */
+    .pad strong {
+      font-size: 2rem; pointer-events: none; z-index: 2;
+      color: rgba(255,255,255,0.3);
+      font-family: 'Courier New', monospace;
+      transition: color 0.1s, text-shadow 0.1s;
+    }
+    .pad-label {
+      font-size: 0.75rem; margin-top: 5px; z-index: 2;
+      color: rgba(255,255,255,0.4); pointer-events: none;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    /* Pad 觸發狀態 */
+    .pad:active { transform: scale(0.95); }
+    
+    .pad.active {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        0 0 10px var(--neon-blue),
+        0 0 20px var(--neon-blue),
+        0 0 40px var(--neon-blue),
+        inset 0 0 20px rgba(0, 243, 255, 0.3);
+      z-index: 10;
+      animation: padPulse 0.1s ease-out;
+    }
+    
+    @keyframes padPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.98); }
+      100% { transform: scale(1); }
+    }
+
+    .pad.active strong {
+      color: #fff;
+      text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue);
+    }
+    .pad.active .pad-label { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+
+    .pad.drag-over { border-color: var(--neon-pink); background: rgba(255, 0, 255, 0.1); }
+    
+    .pad.error {
+      border-color: #ff0000;
+      box-shadow: 0 0 20px #ff0000;
+      animation: shake 0.3s ease-in-out;
+    }
+
+    /* 鐳射進度條 */
+    .progress-bar {
+      position: absolute; bottom: 0; left: 0; height: 4px;
+      background: #fff; width: 0%; opacity: 0;
+      transition: opacity 0.1s; pointer-events: none;
+      box-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink);
+      z-index: 5;
+    }
+    .pad.active .progress-bar { opacity: 1; }
+
+    /* 點擊漣漪特效 */
+    .ripple {
+      position: absolute; border-radius: 50%;
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      background: rgba(255, 255, 255, 0.3);
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* --- 其他 --- */
+    .loading { 
+      text-align: center; margin: 10px; color: var(--neon-blue); 
+      font-weight: bold; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.5; } }
+    
+    .hint { 
+      text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.5); 
+      margin: 10px 0 20px 0; pointer-events: none; font-family: monospace;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 10px 0; }
+      .grid { gap: 10px; }
+      .pad strong { font-size: 1.5rem; }
+      .control-block { min-width: 100%; }
+      h1 { font-size: 1.5rem; margin-bottom: 15px; }
+      .panel { padding: 15px; margin: 0 10px 15px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="startOverlay">
+    <h2>🎵 Web DJ Pad 🎵</h2>
+    <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
+    <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:var(--neon-blue); font-family:monospace; text-align:center; line-height: 1.6;">
+      > POLYPHONY MODE: ACTIVE / 支援多重音效 <br>
+      > NEON ENGINE: ONLINE / 霓虹引擎上線
+    </p>
+  </div>
+
+  <h1>🎵 Web DJ Pad 🎵</h1>
+  
+  <div class="panel">
+    
+    <div class="controls-row">
+      <div class="control-block">
+        <div class="block-header">
+          <span>🔊 MASTER VOLUME / 主音量</span>
+          <div class="value-adjuster">
+            <input type="number" id="vol-input" class="val-input" min="0" max="100" value="80">
+            <span style="color:#aaa; font-size:0.8rem">%</span>
+          </div>
+        </div>
+        <input type="range" id="volume" min="0" max="100" value="80">
+        <div class="presets">
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE (0)</button>
+          <button class="preset-btn" onclick="updateVolume(30)">30</button>
+          <button class="preset-btn" onclick="updateVolume(50)">50</button>
+          <button class="preset-btn" onclick="updateVolume(80)">80</button>
+          <button class="preset-btn" onclick="updateVolume(100)">MAX (100)</button>
+        </div>
+      </div>
+
+      <div class="control-block">
+        <div class="block-header">
+          <span>🚀 PITCH CONTROL / 速度控制</span>
+          <div class="value-adjuster">
+            <button class="adj-btn" onclick="adjustPitch(-0.1)">-</button>
+            <span id="pitch-val" style="min-width: 40px; text-align: center; color:#fff; font-weight:bold; text-shadow:0 0 5px var(--neon-blue);">1.0x</span>
+            <button class="adj-btn" onclick="adjustPitch(0.1)">+</button>
+          </div>
+        </div>
+        <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" value="1.0">
+        <div class="presets">
+          <button class="preset-btn" onclick="updatePitch(0.5)">.5x</button>
+          <button class="preset-btn" onclick="updatePitch(0.8)">.8x</button>
+          <button class="preset-btn" onclick="updatePitch(1.0)">1x</button>
+          <button class="preset-btn" onclick="updatePitch(1.2)">1.2x</button>
+          <button class="preset-btn" onclick="updatePitch(1.5)">1.5x</button>
+          <button class="preset-btn" onclick="updatePitch(2.0)">2x</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mode-container">
+      <button class="mode-btn active" data-mode="normal">NORMAL<br>標準</button>
+      <button class="mode-btn" data-mode="loop">LOOP<br>循環</button>
+      <button class="mode-btn" data-mode="oneshot">ONE-SHOT<br>單次</button>
+    </div>
+
+  </div>
+
+  <div id="loading" class="loading">LOADING AUDIO ASSETS... / 載入音效資源中...</div>
+  
+  <div class="grid-container">
+    <div class="grid" id="padGrid"></div>
+  </div>
+  
+  <div class="hint">💡 TIP: MULTI-TOUCH & DRAG DROP / 提示：支援多重音效與拖曳更換</div>
+
+  <script>
+    // --- 配置常數 ---
+    const PAD_KEYS = ["1","2","3","4","A","C","D","E","F","Q","R","S","V","W","X","Z"];
+    const DEFAULT_FILES = [
+      "1_親愛的.mp3", "2_示意停車.mp3", "3_去洪幹幹欸.mp3", "4_DAMN.mp3",
+      "A_For Elise(Oiiai).mp3", "C_Dj Airhorn.mp3", "D_星期五晚上.mp3", "E_黑黑黑黑.mp3",
+      "F_請支援收銀.mp3", "Q_John Cena.mp3", "R_阿珍愛上了阿強.mp3", "S_Young Black&Rich.mp3",
+      "V_前方車輛請向右避讓.mp3", "W_王老先生有塊地.mp3", "X_Airhorn.mp3", "Z_新幹線エアホーン.mp3"
+    ];
+    const AUDIO_PATH = "audio/";
+
+    // --- 全域狀態 ---
+    let appState = {
+      mode: "normal",
+      volume: 0.8,
+      playbackRate: 1.0
+    };
+    let isInitialized = false;
+    let saveSettingsTimer = null;
+
+    const activeAudios = {}; 
+    const runningSounds = new Set();
+    
+    const preloadedAudios = {};
+    const padElements = {};
+    const pressedKeys = new Set();
+    const progressAnimationIds = {};
+    const blobUrls = {};
+
+    // --- 工具函數 ---
+    function getPadLabel(fname) {
+      if (!fname) return "EMPTY";
+      try { fname = decodeURIComponent(fname); } catch(e){}
+      const match = fname.match(/_(.+)\.\w+$/);
+      return match ? match[1] : fname.replace(/\.\w+$/, '');
+    }
+
+    function safeSetPointerCapture(el, id) {
+      try { if(el.hasPointerCapture?.(id)) return; el.setPointerCapture?.(id); } catch(e){}
+    }
+    function safeReleasePointerCapture(el, id) {
+      try { if(!el.hasPointerCapture?.(id)) return; el.releasePointerCapture?.(id); } catch(e){}
+    }
+
+    // 【完美修正】創建漣漪特效 - 包含清理舊元素與自動銷毀
+    function createRipple(event, element) {
+      const circle = document.createElement("span");
+      const diameter = Math.max(element.clientWidth, element.clientHeight);
+      const radius = diameter / 2;
+
+      // 如果是鍵盤觸發，event 為 null，位置設在中心
+      let x, y;
+      if (event && event.clientX) {
+        const rect = element.getBoundingClientRect();
+        x = event.clientX - rect.left - radius;
+        y = event.clientY - rect.top - radius;
+      } else {
+        x = element.clientWidth / 2 - radius;
+        y = element.clientHeight / 2 - radius;
+      }
+
+      circle.style.width = circle.style.height = `${diameter}px`;
+      circle.style.left = `${x}px`;
+      circle.style.top = `${y}px`;
+      circle.classList.add("ripple");
+
+      // 1. 移除該元素內的所有舊漣漪 (解決快速連擊堆積)
+      Array.from(element.getElementsByClassName("ripple")).forEach(r => r.remove());
+
+      // 2. 加入自動銷毀 (解決單次點擊殘留)
+      circle.addEventListener('animationend', () => {
+        circle.remove();
+      });
+
+      element.appendChild(circle);
+    }
+
+    // --- 1. 設定管理 (LocalStorage) ---
+    function loadSettings() {
+      const saved = localStorage.getItem('djPadSettingsPro');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          appState = { ...appState, ...parsed }; 
+          
+          updateUIControls(); 
+          
+          document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === appState.mode);
+          });
+        } catch(e) { console.error("設定讀取失敗", e); }
+      }
+    }
+
+    function saveSettings() {
+      clearTimeout(saveSettingsTimer);
+      saveSettingsTimer = setTimeout(() => {
+        localStorage.setItem('djPadSettingsPro', JSON.stringify(appState));
+      }, 300);
+    }
+
+    // --- 2. 核心：預載入音頻 ---
+    async function preloadAudios() {
+      const loadingEl = document.getElementById('loading');
+      let loadedCount = 0;
+      const total = DEFAULT_FILES.length;
+
+      const promises = DEFAULT_FILES.map((file, idx) => {
+        return new Promise((resolve) => {
+          const key = PAD_KEYS[idx];
+          const audio = new Audio();
+            
+          const done = () => {
+            loadedCount++;
+            loadingEl.textContent = `SYSTEM LOADING... ${Math.floor((loadedCount / total) * 100)}%`;
+            resolve();
+          };
+
+          audio.oncanplaythrough = () => { preloadedAudios[key] = audio; done(); };
+          audio.onerror = () => { 
+            console.warn(`⚠️ 缺檔: ${file}`);
+            preloadedAudios[key] = null;
+            done(); 
+          };
+
+          audio.src = AUDIO_PATH + file;
+          audio.preload = 'auto';
+          audio.load();
+        });
+      });
+
+      await Promise.all(promises);
+      loadingEl.style.display = 'none';
+    }
+
+    // --- 3. 獨立動畫控制 ---
+    function startProgressAnimation(key, audioInstance) {
+      if (progressAnimationIds[key]) {
+        cancelAnimationFrame(progressAnimationIds[key]);
+      }
+
+      const pad = padElements[key];
+      const progressBar = pad.querySelector('.progress-bar');
+
+      const update = () => {
+        if (activeAudios[key] !== audioInstance) return;
+
+        if (audioInstance.duration && Number.isFinite(audioInstance.duration)) {
+          const pct = (audioInstance.currentTime / audioInstance.duration) * 100;
+          progressBar.style.width = `${pct}%`;
+        }
+
+        if (!audioInstance.paused && !audioInstance.ended) {
+          progressAnimationIds[key] = requestAnimationFrame(update);
+        }
+      };
+
+      progressAnimationIds[key] = requestAnimationFrame(update);
+    }
+
+    // --- 4. 播放邏輯 ---
+    function playPad(key, event = null) {
+      if (!isInitialized) return;
+
+      const pad = padElements[key];
+      if (!pad) return;
+
+      // 觸發視覺特效
+      createRipple(event, pad);
+
+      if (!preloadedAudios[key]) {
+        triggerVisualError(pad);
+        return;
+      }
+
+      // 模式邏輯 (單次與循環需處理)
+      if (appState.mode === "oneshot") {
+        stopAllPads(); 
+      } else if (appState.mode === "loop") {
+        if (activeAudios[key]) {
+          stopPad(key); 
+          return;
+        }
+      } 
+
+      const sourceAudio = preloadedAudios[key];
+      if (!sourceAudio || !sourceAudio.src) { triggerVisualError(pad); return; }
+
+      const audio = sourceAudio.cloneNode();
+      audio.volume = appState.volume;
+      audio.playbackRate = appState.playbackRate;
+      audio.loop = (appState.mode === "loop");
+      audio._padKey = key;
+
+      runningSounds.add(audio);
+
+      audio.onended = () => {
+        runningSounds.delete(audio);
+        const remainingSounds = [...runningSounds].filter(a => a._padKey === key);
+
+        if (activeAudios[key] === audio) {
+          if (remainingSounds.length > 0) {
+            const nextAudio = remainingSounds[remainingSounds.length - 1];
+            activeAudios[key] = nextAudio;
+            startProgressAnimation(key, nextAudio);
+          } else {
+            delete activeAudios[key];
+            pad.classList.remove('active');
+            pad.querySelector('.progress-bar').style.width = '0%';
+            if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
+          }
+        } else if (remainingSounds.length === 0) {
+           pad.classList.remove('active');
+           pad.querySelector('.progress-bar').style.width = '0%';
+           delete activeAudios[key];
+        }
+      };
+
+      activeAudios[key] = audio;
+      pad.classList.add('active');
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            if (activeAudios[key] === audio) {
+              startProgressAnimation(key, audio);
+            }
+          })
+          .catch(err => {
+            console.error(`播放失敗: ${key}`, err);
+            runningSounds.delete(audio);
+            if (activeAudios[key] === audio) {
+              pad.classList.remove('active');
+              delete activeAudios[key];
+              triggerVisualError(pad);
+            }
+          });
+      }
+    }
+
+    function stopPad(key) {
+      runningSounds.forEach(audio => {
+        if (audio._padKey === key) {
+          audio.pause();
+          audio.currentTime = 0;
+          runningSounds.delete(audio);
+        }
+      });
+      
+      if (progressAnimationIds[key]) {
+        cancelAnimationFrame(progressAnimationIds[key]);
+        delete progressAnimationIds[key];
+      }
+      
+      const pad = padElements[key];
+      if (pad) {
+        pad.classList.remove('active');
+        pad.querySelector('.progress-bar').style.width = '0%';
+      }
+      delete activeAudios[key];
+    }
+
+    function stopAllPads() {
+      runningSounds.forEach(audio => {
+          audio.pause();
+          audio.currentTime = 0;
+      });
+      runningSounds.clear();
+      
+      Object.keys(padElements).forEach(key => {
+        const pad = padElements[key];
+        if (pad) {
+            pad.classList.remove('active');
+            pad.querySelector('.progress-bar').style.width = '0%';
+        }
+        if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
+      });
+      
+      for (const key in activeAudios) delete activeAudios[key];
+    }
+
+    function triggerVisualError(pad) {
+      pad.classList.add('error');
+      setTimeout(() => pad.classList.remove('error'), 300);
+    }
+
+    // --- 5. Drag & Drop ---
+    function setupDragAndDrop(pad, key) {
+      pad.ondragover = (e) => { e.preventDefault(); pad.classList.add('drag-over'); };
+      pad.ondragleave = (e) => { e.preventDefault(); pad.classList.remove('drag-over'); };
+
+      pad.ondrop = (e) => {
+        e.preventDefault();
+        pad.classList.remove('drag-over');
+
+        const file = e.dataTransfer.files[0];
+        if (file && (file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|ogg|m4a)$/i))) {
+          if (blobUrls[key]) {
+            URL.revokeObjectURL(blobUrls[key]);
+            delete blobUrls[key];
+          }
+
+          const objectUrl = URL.createObjectURL(file);
+          blobUrls[key] = objectUrl;
+          
+          const newAudio = new Audio(objectUrl);
+          newAudio.preload = 'auto';
+          
+          preloadedAudios[key] = newAudio;
+          
+          const labelEl = pad.querySelector('.pad-label');
+          labelEl.textContent = file.name.replace(/\.\w+$/, '');
+          labelEl.style.color = "#00f3ff";
+          
+          pad.style.borderColor = "#00f3ff";
+          setTimeout(() => pad.style.borderColor = "rgba(255,255,255,0.1)", 500);
+        } else {
+          triggerVisualError(pad);
+        }
+      };
+    }
+
+    // --- 6. DOM 初始化 ---
+    const padGrid = document.getElementById('padGrid');
+    
+    PAD_KEYS.forEach((key, idx) => {
+      const fname = DEFAULT_FILES[idx];
+      const pad = document.createElement('div');
+      
+      pad.className = "pad";
+      pad.innerHTML = `
+        <strong>${key}</strong>
+        <div class="pad-label">${getPadLabel(fname)}</div>
+        <div class="progress-bar"></div>
+      `;
+      
+      pad.setAttribute('role', 'button');
+      pad.setAttribute('aria-label', `播放 ${key}`);
+      pad.tabIndex = 0;
+
+      pad.onpointerdown = (e) => {
+        e.preventDefault();
+        safeSetPointerCapture(pad, e.pointerId);
+        playPad(key, e); // 傳入事件以產生漣漪
+      };
+      pad.onpointerup = (e) => safeReleasePointerCapture(pad, e.pointerId);
+      pad.onpointercancel = (e) => safeReleasePointerCapture(pad, e.pointerId);
+
+      setupDragAndDrop(pad, key);
+
+      padGrid.appendChild(pad);
+      padElements[key] = pad;
+    });
+
+    // --- 7. UI 控制與事件監聽 ---
+    
+    function updateVolume(val) {
+      let v = parseInt(val);
+      if (isNaN(v)) v = 80;
+      if (v < 0) v = 0;
+      if (v > 100) v = 100;
+      
+      appState.volume = v / 100;
+      
+      document.getElementById('volume').value = v;
+      document.getElementById('vol-input').value = v;
+      
+      runningSounds.forEach(audio => audio.volume = appState.volume);
+      saveSettings();
+    }
+
+    function updatePitch(val) {
+      let p = parseFloat(val);
+      if (isNaN(p)) p = 1.0;
+      if (p < 0.5) p = 0.5;
+      if (p > 2.0) p = 2.0;
+      
+      p = parseFloat(p.toFixed(1));
+
+      appState.playbackRate = p;
+      
+      document.getElementById('pitch').value = p;
+      document.getElementById('pitch-val').textContent = p + "x";
+      
+      runningSounds.forEach(audio => audio.playbackRate = appState.playbackRate);
+      saveSettings();
+    }
+
+    function adjustPitch(delta) {
+      let newPitch = appState.playbackRate + delta;
+      updatePitch(newPitch);
+    }
+
+    function updateUIControls() {
+      document.getElementById('volume').value = appState.volume * 100;
+      document.getElementById('vol-input').value = Math.round(appState.volume * 100);
+      
+      document.getElementById('pitch').value = appState.playbackRate;
+      document.getElementById('pitch-val').textContent = appState.playbackRate + "x";
+    }
+
+    document.getElementById('volume').oninput = (e) => updateVolume(e.target.value);
+    document.getElementById('vol-input').onchange = (e) => updateVolume(e.target.value);
+    
+    document.getElementById('pitch').oninput = (e) => updatePitch(e.target.value);
+
+    // 【模式切換邏輯 - 修正】
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.onclick = () => {
+        const newMode = btn.dataset.mode;
+        
+        // 只有當模式真正改變時，才停止播放 (體驗優化)
+        if (appState.mode !== newMode) {
+           stopAllPads();
+           appState.mode = newMode;
+           
+           document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+           btn.classList.add('active');
+           
+           saveSettings();
+        }
+      };
+    });
+
+    // 鍵盤控制
+    document.addEventListener('keydown', (e) => {
+      if (!isInitialized) return;
+      if (e.isComposing || e.keyCode === 229) return;
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      const key = e.key.toUpperCase();
+      if (pressedKeys.has(key)) return;
+      pressedKeys.add(key);
+
+      if (PAD_KEYS.includes(key)) {
+        e.preventDefault();
+        (e.ctrlKey || e.metaKey) ? stopPad(key) : playPad(key); // 鍵盤觸發沒有 click event，漣漪會出現在中心
+      } else if (e.code === "Space") {
+        e.preventDefault();
+        stopAllPads();
+      }
+    });
+
+    document.addEventListener('keyup', (e) => pressedKeys.delete(e.key.toUpperCase()));
+    window.addEventListener('blur', () => pressedKeys.clear());
+
+    window.addEventListener('beforeunload', () => {
+      Object.values(blobUrls).forEach(url => URL.revokeObjectURL(url));
+    });
+
+    // --- 8. 啟動程序 ---
+    const overlay = document.getElementById('startOverlay');
+    const startBtn = document.querySelector('.start-btn');
+    
+    startBtn.onclick = () => {
+      isInitialized = true;
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 500);
+      
+      const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+      silentAudio.play().then(() => {
+        console.log("✅ AUDIO SYSTEM ONLINE");
+      }).catch(e => {
+        console.warn("⚠️ AUDIO UNLOCK FAILED:", e);
+      });
+    };
+
+    loadSettings();
+    preloadAudios();
+
+  </script>
+</body>
+</html>
