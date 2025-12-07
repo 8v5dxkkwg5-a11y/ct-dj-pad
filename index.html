@@ -120,7 +120,7 @@
       border: 2px solid transparent;
       background: linear-gradient(#000, #000) padding-box,
                   linear-gradient(45deg, #ff0000, #00ff00, #0000ff, #ff0000) border-box;
-      background-size: 400%;
+      background-size: 100%, 400%;
       animation: rgbFlow 10s linear infinite;
       color: #fff; font-size: 1.2rem; font-weight: bold;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
@@ -138,9 +138,6 @@
 
     /* --- 3. 控制面板 (RGB Border) --- */
     .panel {
-      /* [修正] 移除這行 background，避免與 ::after 的背景疊加導致太黑 */
-      /* background: var(--glass-bg); */
-      
       padding: 20px;
       margin: 0 15px 20px 15px;
       border-radius: 20px;
@@ -166,7 +163,7 @@
       opacity: 0.8;
       filter: blur(10px);
     }
-    /* 實體邊框遮罩 (這裡負責玻璃背景色) */
+    /* 實體邊框遮罩 */
     .panel::after {
       content: "";
       position: absolute;
@@ -312,18 +309,29 @@
       100% { background-color: rgba(148, 0, 211, 0.4); box-shadow: 0 0 30px rgba(148, 0, 211, 0.6); }
     }
 
-    /* 隨機 Spotlight 效果 */
+    /* 隨機 Spotlight 效果 (使用 CSS 變數) */
     .pad.spotlight {
+      --spot-color: rgba(255, 255, 255, 0.8);
       animation: spotlightFlash 0.6s ease-out;
-      border-color: rgba(255, 255, 255, 0.8);
+      border-color: var(--spot-color);
     }
     .pad.spotlight strong {
-      color: #fff; text-shadow: 0 0 10px #fff;
+      color: #fff; text-shadow: 0 0 10px var(--spot-color);
     }
 
     @keyframes spotlightFlash {
-      0% { background: rgba(255, 255, 255, 0.3); box-shadow: 0 0 20px #fff; transform: scale(1.02); }
-      100% { background: rgba(30, 30, 40, 0.8); box-shadow: 0 4px 6px rgba(0,0,0,0.5); transform: scale(1); }
+      0% { 
+        background: var(--spot-color); 
+        box-shadow: 0 0 25px var(--spot-color); 
+        transform: scale(1.05); 
+        opacity: 0.8; 
+      }
+      100% { 
+        background: rgba(30, 30, 40, 0.8); 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
+        transform: scale(1); 
+        opacity: 1;
+      }
     }
     
     @keyframes padPulse {
@@ -392,8 +400,8 @@
     <h2>🎵 Web DJ Pad 🎵</h2>
     <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
     <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:#fff; font-family:monospace; text-align:center; line-height: 1.6; text-shadow: 0 0 5px #00f3ff;">
-      > POLYPHONY MODE: ACTIVE / 支援多重音效 < <br>
-      > RGB ENGINE: MAXIMUM POWER <
+      > POLYPHONY MODE: ACTIVE / 支援多重音效 <br>
+      > RGB ENGINE: MAXIMUM POWER
     </p>
   </div>
 
@@ -455,7 +463,7 @@
     <div class="grid" id="padGrid"></div>
   </div>
   
-  <div class="hint">💡 TIP: MULTI-TOUCH / 提示：支援多重音效</div>
+  <div class="hint">💡 TIP: MULTI-TOUCH & DRAG DROP / 提示：支援多重音效與拖曳更換</div>
 
   <script>
     const PAD_KEYS = ["1","2","3","4","A","C","D","E","F","Q","R","S","V","W","X","Z"];
@@ -580,6 +588,9 @@
       selectedKeys.forEach(key => {
         const pad = padElements[key];
         if (pad && !pad.classList.contains('active')) {
+          const hue = Math.floor(Math.random() * 360);
+          pad.style.setProperty('--spot-color', `hsla(${hue}, 100%, 50%, 0.6)`);
+          
           pad.classList.add('spotlight');
           setTimeout(() => pad.classList.remove('spotlight'), 600);
         }
@@ -987,7 +998,6 @@
       initParticles();
       autoSpotlightLoop();
 
-      // [修正] 補上 data: 前綴，確保 iOS 可解鎖音頻
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
       silentAudio.play().then(() => {
         console.log("✅ AUDIO SYSTEM ONLINE");
