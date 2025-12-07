@@ -325,9 +325,9 @@
 
   <div id="startOverlay">
     <h2>🎵 DJ Pad 🎵</h2>
-    <button class="start-btn">INITIALIZE SYSTEM</button>
+    <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
     <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:var(--neon-blue); font-family:monospace;">
-      > POLYPHONY MODE: ACTIVE<br>
+      > POLYPHONY MODE: ACTIVE / 支援多重音效疊加 <br>
       > NEON ENGINE: ONLINE
     </p>
   </div>
@@ -339,7 +339,7 @@
     <div class="controls-row">
       <div class="control-block">
         <div class="block-header">
-          <span>🔊 MASTER VOLUME</span>
+          <span>🔊 MASTER VOLUME / 音量控制</span>
           <div class="value-adjuster">
             <input type="number" id="vol-input" class="val-input" min="0" max="100" value="80">
             <span style="color:#aaa; font-size:0.8rem">%</span>
@@ -347,17 +347,17 @@
         </div>
         <input type="range" id="volume" min="0" max="100" value="80">
         <div class="presets">
-          <button class="preset-btn" onclick="updateVolume(0)">MUTE</button>
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE(0)</button>
           <button class="preset-btn" onclick="updateVolume(30)">30</button>
           <button class="preset-btn" onclick="updateVolume(50)">50</button>
           <button class="preset-btn" onclick="updateVolume(80)">80</button>
-          <button class="preset-btn" onclick="updateVolume(100)">MAX</button>
+          <button class="preset-btn" onclick="updateVolume(100)">MAX(100)</button>
         </div>
       </div>
 
       <div class="control-block">
         <div class="block-header">
-          <span>🚀 PITCH CONTROL</span>
+          <span>🚀 PITCH CONTROL / 速度控制</span>
           <div class="value-adjuster">
             <button class="adj-btn" onclick="adjustPitch(-0.1)">-</button>
             <span id="pitch-val" style="min-width: 40px; text-align: center; color:#fff; font-weight:bold; text-shadow:0 0 5px var(--neon-blue);">1.0x</span>
@@ -377,20 +377,20 @@
     </div>
 
     <div class="mode-container">
-      <button class="mode-btn active" data-mode="normal">NORMAL</button>
-      <button class="mode-btn" data-mode="loop">LOOP</button>
-      <button class="mode-btn" data-mode="oneshot">ONE-SHOT</button>
+      <button class="mode-btn active" data-mode="normal">NORMAL / 標準</button>
+      <button class="mode-btn" data-mode="loop">LOOP / 循環</button>
+      <button class="mode-btn" data-mode="oneshot">ONE-SHOT / 單次</button>
     </div>
 
   </div>
 
-  <div id="loading" class="loading">LOADING AUDIO ASSETS...</div>
+  <div id="loading" class="loading">LOADING AUDIO ASSETS... / 正在加載音訊資源</div>
   
   <div class="grid-container">
     <div class="grid" id="padGrid"></div>
   </div>
   
-  <div class="hint">DRAG & DROP AUDIO FILES SUPPORTED</div>
+  <div class="hint">SUPPORTS MULTIPLE SOUND EFFECTS LAYERING / 支援多重音效疊加</div>
 
   <script>
     // --- 配置常數 ---
