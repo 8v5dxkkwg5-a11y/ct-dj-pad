@@ -5,247 +5,306 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>🎵 Web DJ Pad 🎵</title>
   <style>
-    /* --- 1. 基礎設定 --- */
+    /* --- 1. 超華麗基礎設定 --- */
+    :root {
+      --neon-blue: #00f3ff;
+      --neon-pink: #ff00ff;
+      --neon-purple: #bc13fe;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
     body {
-      background: #121220; 
-      color: #fff; 
-      font-family: 'Segoe UI', system-ui, sans-serif; 
+      background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 50%, #000000 100%);
+      color: #fff;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       margin: 0;
-      user-select: none; 
+      user-select: none;
       -webkit-user-select: none;
       overscroll-behavior: none;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 動態背景網格特效 */
+    body::before {
+      content: "";
+      position: fixed; top: 0; left: 0; width: 200%; height: 200%;
+      background-image: 
+        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+      animation: gridMove 20s linear infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @keyframes gridMove {
+      0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+      100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); }
     }
 
     h1 {
-      text-align: center; 
-      color: #00d4ff; 
-      margin: 15px 0 10px 0; 
-      font-weight: 800;
-      font-size: 1.8rem;
-      text-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+      text-align: center;
+      color: #fff;
+      margin: 20px 0 15px 0;
+      font-weight: 900;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px var(--neon-blue),
+        0 0 40px var(--neon-blue);
+      animation: titlePulse 2s infinite alternate;
       z-index: 10;
     }
 
-    /* --- 2. 啟動遮罩 --- */
+    @keyframes titlePulse {
+      0% { text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue); }
+      100% { text-shadow: 0 0 20px #fff, 0 0 40px var(--neon-blue), 0 0 80px var(--neon-purple); }
+    }
+
+    /* --- 2. 啟動遮罩 (Cyberpunk Style) --- */
     #startOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(18, 18, 32, 0.98);
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
       display: flex; flex-direction: column; justify-content: center; align-items: center;
-      z-index: 9999; 
+      z-index: 9999;
       transition: opacity 0.5s;
     }
-    #startOverlay h2 { color: #00d4ff; margin-bottom: 30px; font-size: 2rem; }
+    #startOverlay h2 { 
+      color: #fff; margin-bottom: 40px; font-size: 2.5rem; 
+      text-shadow: 0 0 20px var(--neon-pink);
+    }
     .start-btn {
-      padding: 15px 50px; border-radius: 50px; border: none;
-      background: linear-gradient(45deg, #00d4ff, #ff4081);
-      color: #fff; font-size: 1.2rem; font-weight: bold;
-      box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+      padding: 20px 60px; border-radius: 50px; border: 2px solid var(--neon-blue);
+      background: transparent;
+      color: var(--neon-blue); font-size: 1.5rem; font-weight: bold;
+      box-shadow: 0 0 15px var(--neon-blue), inset 0 0 15px var(--neon-blue);
       cursor: pointer;
-      animation: pulse 2s infinite;
-      transition: transform 0.2s;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
     }
-    .start-btn:active { transform: scale(0.95); }
+    .start-btn:hover {
+      background: var(--neon-blue);
+      color: #000;
+      box-shadow: 0 0 50px var(--neon-blue);
+    }
 
-    /* --- 3. 控制面板 (重構版) --- */
+    /* --- 3. 控制面板 (Holographic Glass) --- */
     .panel {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 15px;
-      margin: 0 10px 10px 10px;
-      border-radius: 16px;
-      display: flex; 
-      flex-direction: column;
-      gap: 15px; 
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(20, 20, 30, 0.6);
+      padding: 20px;
+      margin: 0 15px 20px 15px;
+      border-radius: 20px;
+      display: flex; flex-direction: column; gap: 20px;
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
       z-index: 10;
+      position: relative;
+    }
+    /* 裝飾線條 */
+    .panel::after {
+      content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 80%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
     }
 
-    /* 控制區塊容器 */
     .controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
+      display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
     }
 
     .control-block {
-      background: rgba(0, 0, 0, 0.2);
-      padding: 10px 15px;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-      min-width: 280px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px; border-radius: 15px;
+      display: flex; flex-direction: column; gap: 10px;
+      flex: 1; min-width: 280px;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.2s;
     }
+    .control-block:hover { border-color: rgba(255,255,255,0.2); }
 
     .block-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.9rem;
-      color: #ccc;
-      font-weight: 600;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.9rem; color: var(--neon-blue); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    /* 數值顯示與微調區 */
-    .value-adjuster {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .value-adjuster { display: flex; align-items: center; gap: 10px; }
 
-    /* 輸入框樣式 */
     .val-input {
-      background: #222;
-      border: 1px solid #444;
-      color: #00d4ff;
-      width: 50px;
-      text-align: center;
-      border-radius: 4px;
-      padding: 2px 4px;
-      font-weight: bold;
-      font-size: 0.9rem;
+      background: rgba(0,0,0,0.5); border: 1px solid var(--neon-blue);
+      color: #fff; width: 50px; text-align: center; border-radius: 5px;
+      padding: 4px; font-weight: bold; font-family: monospace;
+      box-shadow: 0 0 5px var(--neon-blue);
     }
-    .val-input:focus { outline: none; border-color: #00d4ff; }
 
-    /* 微調按鈕 (+/-) */
     .adj-btn {
-      width: 24px; height: 24px;
-      border-radius: 4px; border: 1px solid #444;
-      background: #333; color: #fff;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; line-height: 1;
-      transition: background 0.1s;
-    }
-    .adj-btn:hover { background: #444; border-color: #00d4ff; }
-    .adj-btn:active { transform: scale(0.95); }
-
-    /* 滑桿樣式 */
-    input[type=range] {
-      -webkit-appearance: none; width: 100%; height: 6px;
-      background: #444; border-radius: 3px; outline: none;
-      margin: 5px 0;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 18px; height: 18px;
-      border-radius: 50%; background: #00d4ff; cursor: pointer;
-      transition: transform 0.1s; box-shadow: 0 0 10px rgba(0,212,255,0.5);
-    }
-    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
-
-    /* 快捷按鈕區 */
-    .presets {
-      display: flex;
-      gap: 6px;
-      justify-content: space-between;
-    }
-    .preset-btn {
-      flex: 1;
-      padding: 4px 0;
-      font-size: 0.75rem;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid transparent;
-      border-radius: 6px;
-      color: #aaa;
-      cursor: pointer;
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid var(--neon-blue); background: rgba(0, 243, 255, 0.1);
+      color: var(--neon-blue); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .preset-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
-    .preset-btn:active { background: #00d4ff; color: #000; }
-    
+    .adj-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
+
+    /* 霓虹滑桿 */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      background: #333; border-radius: 3px; outline: none; margin: 10px 0;
+      box-shadow: inset 0 0 5px #000;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: #fff; cursor: pointer;
+      box-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink);
+      transition: transform 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .presets { display: flex; gap: 5px; justify-content: space-between; }
+    .preset-btn {
+      flex: 1; padding: 6px 0; font-size: 0.7rem;
+      background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px; color: #aaa; cursor: pointer; transition: all 0.2s;
+    }
+    .preset-btn:hover { border-color: var(--neon-blue); color: #fff; box-shadow: 0 0 5px var(--neon-blue); }
+
     /* 模式按鈕 */
-    .mode-container {
-      display: flex; justify-content: center; gap: 10px; margin-top: 5px;
-    }
+    .mode-container { display: flex; justify-content: center; gap: 15px; margin-top: 5px; }
     .mode-btn {
-      padding: 8px 20px; border: 1px solid #444; border-radius: 20px;
-      cursor: pointer; background: #222; color: #aaa; font-size: 0.9rem;
-      transition: all 0.2s; flex: 1; max-width: 100px; text-align: center;
+      padding: 10px 25px; border: 1px solid rgba(255,255,255,0.2); border-radius: 30px;
+      cursor: pointer; background: rgba(0,0,0,0.3); color: #ccc; font-weight: bold;
+      transition: all 0.3s; flex: 1; max-width: 120px;
+      position: relative; overflow: hidden;
     }
-    .mode-btn:hover { background: #333; color: #fff; }
+    .mode-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
     .mode-btn.active {
-      background: linear-gradient(135deg, #00d4ff, #005bea);
-      color: #fff; border-color: transparent;
-      box-shadow: 0 4px 12px rgba(0, 91, 234, 0.4);
+      border-color: var(--neon-pink);
+      color: #fff;
+      background: rgba(255, 0, 255, 0.1);
+      box-shadow: 0 0 15px var(--neon-pink), inset 0 0 10px var(--neon-pink);
     }
 
     /* --- 4. Pad 網格佈局 --- */
     .grid-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 10px 20px 10px;
-      width: 100%;
-      box-sizing: border-box;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 0 10px 30px 10px; width: 100%; box-sizing: border-box; perspective: 1000px;
     }
 
     .grid {
-      display: grid; 
-      grid-template-columns: repeat(4, 1fr); 
-      gap: 12px; 
-      width: 100%;
-      max-width: 600px; 
-      aspect-ratio: 1/1;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
+      width: 100%; max-width: 600px; aspect-ratio: 1/1;
+      transform-style: preserve-3d;
     }
 
-    /* --- 5. Pad 本體樣式 --- */
+    /* --- 5. Pad 本體 (Cyberpunk Style) --- */
     .pad {
-      background: linear-gradient(145deg, #2a2a3a, #1a1a25); 
-      border-radius: 12px; 
-      display: flex; flex-direction: column; align-items: center; justify-content: center; 
+      background: rgba(30, 30, 40, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; position: relative; overflow: hidden;
       touch-action: none; -webkit-tap-highlight-color: transparent;
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), 0 6px 15px rgba(0,0,0,0.4);
-      transition: transform 0.05s, box-shadow 0.1s, border-color 0.2s;
-      border: 2px solid transparent;
+      box-shadow: 
+        0 4px 6px rgba(0,0,0,0.3), 
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        inset 0 0 20px rgba(0,0,0,0.5);
+      transition: all 0.1s;
     }
 
-    /* 互動狀態 */
-    .pad:active { transform: scale(0.96); }
-    .pad.active {
-      background: linear-gradient(145deg, #00d4ff, #ff0055); 
-      box-shadow: 0 0 25px rgba(0, 212, 255, 0.6);
-      border-color: rgba(255,255,255,0.5);
+    /* Pad 內部發光字體 */
+    .pad strong {
+      font-size: 2rem; pointer-events: none; z-index: 2;
+      color: rgba(255,255,255,0.3);
+      font-family: 'Courier New', monospace;
+      transition: color 0.1s, text-shadow 0.1s;
     }
-    .pad.drag-over { border-color: #00d4ff; background: #333; transform: scale(1.02); }
+    .pad-label {
+      font-size: 0.75rem; margin-top: 5px; z-index: 2;
+      color: rgba(255,255,255,0.4); pointer-events: none;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    /* Pad 觸發狀態 (最炫炮的部分) */
+    .pad:active { transform: scale(0.95); }
+    
+    .pad.active {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        0 0 10px var(--neon-blue),
+        0 0 20px var(--neon-blue),
+        0 0 40px var(--neon-blue),
+        inset 0 0 20px rgba(0, 243, 255, 0.3);
+      z-index: 10;
+      animation: padPulse 0.1s ease-out;
+    }
+    
+    @keyframes padPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.98); }
+      100% { transform: scale(1); }
+    }
+
+    .pad.active strong {
+      color: #fff;
+      text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue);
+    }
+    .pad.active .pad-label { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+
+    .pad.drag-over { border-color: var(--neon-pink); background: rgba(255, 0, 255, 0.1); }
+    
     .pad.error {
-      background: linear-gradient(145deg, #ff4444, #cc0000);
+      border-color: #ff0000;
+      box-shadow: 0 0 20px #ff0000;
       animation: shake 0.3s ease-in-out;
     }
 
-    /* Pad 內容 */
-    .pad strong { 
-      font-size: 1.8rem; pointer-events: none; z-index: 2;
-      color: rgba(255,255,255,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    }
-    .pad-label { 
-      font-size: 0.8rem; margin-top: 4px; z-index: 2;
-      color: rgba(255,255,255,0.5); pointer-events: none; 
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;
-    }
-    .pad.active strong, .pad.active .pad-label { color: #fff; }
-
-    /* 進度條 */
+    /* 鐳射進度條 */
     .progress-bar {
-      position: absolute; bottom: 0; left: 0; height: 5px;
+      position: absolute; bottom: 0; left: 0; height: 4px;
       background: #fff; width: 0%; opacity: 0;
       transition: opacity 0.1s; pointer-events: none;
-      box-shadow: 0 0 10px rgba(255,255,255,0.8);
-      z-index: 1;
+      box-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink);
+      z-index: 5;
     }
     .pad.active .progress-bar { opacity: 1; }
 
+    /* 點擊漣漪特效 */
+    .ripple {
+      position: absolute; border-radius: 50%;
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      background: rgba(255, 255, 255, 0.3);
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+
     /* --- 其他 --- */
-    .loading { text-align: center; margin: 10px; color: #00d4ff; font-weight: bold; font-size: 0.9rem; }
+    .loading { 
+      text-align: center; margin: 10px; color: var(--neon-blue); 
+      font-weight: bold; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.5; } }
+    
     .hint { 
-      text-align: center; font-size: 0.8rem; color: #666; 
-      margin-bottom: 10px; pointer-events: none; 
+      text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.5); 
+      margin-bottom: 20px; pointer-events: none; font-family: monospace;
     }
 
     @keyframes shake {
@@ -253,26 +312,24 @@
       25% { transform: translateX(-5px); }
       75% { transform: translateX(5px); }
     }
-    @keyframes pulse {
-      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); }
-      70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(0, 212, 255, 0); }
-      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
-    }
 
     @media (max-width: 600px) {
-      .grid { gap: 8px; }
-      .pad strong { font-size: 1.4rem; }
-      .pad-label { font-size: 0.7rem; }
+      .grid { gap: 10px; }
+      .pad strong { font-size: 1.5rem; }
       .control-block { min-width: 100%; }
+      h1 { font-size: 1.5rem; }
     }
   </style>
 </head>
 <body>
 
   <div id="startOverlay">
-    <h2>🎵 Web DJ Pad 🎵</h2>
-    <button class="start-btn">點擊開始 / Click to Start</button>
-    <p style="margin-top:20px; opacity:0.6; font-size:0.9rem; color:#aaa;">支援多重音效疊加 (Polyphony Mode)</p>
+    <h2>🎵 DJ Pad 🎵</h2>
+    <button class="start-btn">INITIALIZE SYSTEM</button>
+    <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:var(--neon-blue); font-family:monospace;">
+      > POLYPHONY MODE: ACTIVE<br>
+      > NEON ENGINE: ONLINE
+    </p>
   </div>
 
   <h1>🎵 Web DJ Pad 🎵</h1>
@@ -282,58 +339,58 @@
     <div class="controls-row">
       <div class="control-block">
         <div class="block-header">
-          <span>🔊 音量 (Volume)</span>
+          <span>🔊 MASTER VOLUME</span>
           <div class="value-adjuster">
             <input type="number" id="vol-input" class="val-input" min="0" max="100" value="80">
-            <span>%</span>
+            <span style="color:#aaa; font-size:0.8rem">%</span>
           </div>
         </div>
         <input type="range" id="volume" min="0" max="100" value="80">
         <div class="presets">
-          <button class="preset-btn" onclick="updateVolume(0)">Mute</button>
-          <button class="preset-btn" onclick="updateVolume(30)">30%</button>
-          <button class="preset-btn" onclick="updateVolume(50)">50%</button>
-          <button class="preset-btn" onclick="updateVolume(80)">80%</button>
-          <button class="preset-btn" onclick="updateVolume(100)">100%</button>
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE</button>
+          <button class="preset-btn" onclick="updateVolume(30)">30</button>
+          <button class="preset-btn" onclick="updateVolume(50)">50</button>
+          <button class="preset-btn" onclick="updateVolume(80)">80</button>
+          <button class="preset-btn" onclick="updateVolume(100)">MAX</button>
         </div>
       </div>
 
       <div class="control-block">
         <div class="block-header">
-          <span>🚀 速度 (Speed)</span>
+          <span>🚀 PITCH CONTROL</span>
           <div class="value-adjuster">
             <button class="adj-btn" onclick="adjustPitch(-0.1)">-</button>
-            <span id="pitch-val" style="min-width: 40px; text-align: center; color:#00d4ff; font-weight:bold;">1.0x</span>
+            <span id="pitch-val" style="min-width: 40px; text-align: center; color:#fff; font-weight:bold; text-shadow:0 0 5px var(--neon-blue);">1.0x</span>
             <button class="adj-btn" onclick="adjustPitch(0.1)">+</button>
           </div>
         </div>
         <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" value="1.0">
         <div class="presets">
-          <button class="preset-btn" onclick="updatePitch(0.5)">0.5x</button>
-          <button class="preset-btn" onclick="updatePitch(0.8)">0.8x</button>
-          <button class="preset-btn" onclick="updatePitch(1.0)">1.0x</button>
+          <button class="preset-btn" onclick="updatePitch(0.5)">.5x</button>
+          <button class="preset-btn" onclick="updatePitch(0.8)">.8x</button>
+          <button class="preset-btn" onclick="updatePitch(1.0)">1x</button>
           <button class="preset-btn" onclick="updatePitch(1.2)">1.2x</button>
           <button class="preset-btn" onclick="updatePitch(1.5)">1.5x</button>
-          <button class="preset-btn" onclick="updatePitch(2.0)">2.0x</button>
+          <button class="preset-btn" onclick="updatePitch(2.0)">2x</button>
         </div>
       </div>
     </div>
 
     <div class="mode-container">
-      <button class="mode-btn active" data-mode="normal">標準</button>
-      <button class="mode-btn" data-mode="loop">循環</button>
-      <button class="mode-btn" data-mode="oneshot">單次</button>
+      <button class="mode-btn active" data-mode="normal">NORMAL</button>
+      <button class="mode-btn" data-mode="loop">LOOP</button>
+      <button class="mode-btn" data-mode="oneshot">ONE-SHOT</button>
     </div>
 
   </div>
 
-  <div id="loading" class="loading">正在預載入音效...</div>
+  <div id="loading" class="loading">LOADING AUDIO ASSETS...</div>
   
   <div class="grid-container">
     <div class="grid" id="padGrid"></div>
   </div>
   
-  <div class="hint">💡 提示：支援連續點擊播放 (Polyphony)</div>
+  <div class="hint">DRAG & DROP AUDIO FILES SUPPORTED</div>
 
   <script>
     // --- 配置常數 ---
@@ -366,7 +423,7 @@
 
     // --- 工具函數 ---
     function getPadLabel(fname) {
-      if (!fname) return "Empty";
+      if (!fname) return "EMPTY";
       try { fname = decodeURIComponent(fname); } catch(e){}
       const match = fname.match(/_(.+)\.\w+$/);
       return match ? match[1] : fname.replace(/\.\w+$/, '');
@@ -379,6 +436,39 @@
       try { if(!el.hasPointerCapture?.(id)) return; el.releasePointerCapture?.(id); } catch(e){}
     }
 
+    // 【完美修正】創建漣漪特效 - 包含清理舊元素與自動銷毀
+    function createRipple(event, element) {
+      const circle = document.createElement("span");
+      const diameter = Math.max(element.clientWidth, element.clientHeight);
+      const radius = diameter / 2;
+
+      // 如果是鍵盤觸發，event 為 null，位置設在中心
+      let x, y;
+      if (event && event.clientX) {
+        const rect = element.getBoundingClientRect();
+        x = event.clientX - rect.left - radius;
+        y = event.clientY - rect.top - radius;
+      } else {
+        x = element.clientWidth / 2 - radius;
+        y = element.clientHeight / 2 - radius;
+      }
+
+      circle.style.width = circle.style.height = `${diameter}px`;
+      circle.style.left = `${x}px`;
+      circle.style.top = `${y}px`;
+      circle.classList.add("ripple");
+
+      // 1. 移除舊的漣漪 (解決快速連擊堆積)
+      Array.from(element.getElementsByClassName("ripple")).forEach(r => r.remove());
+
+      // 2. 加入自動銷毀 (解決單次點擊殘留)
+      circle.addEventListener('animationend', () => {
+        circle.remove();
+      });
+
+      element.appendChild(circle);
+    }
+
     // --- 1. 設定管理 (LocalStorage) ---
     function loadSettings() {
       const saved = localStorage.getItem('djPadSettingsPro');
@@ -387,7 +477,7 @@
           const parsed = JSON.parse(saved);
           appState = { ...appState, ...parsed }; 
           
-          updateUIControls(); // 統一更新 UI
+          updateUIControls(); 
           
           document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === appState.mode);
@@ -416,7 +506,7 @@
             
           const done = () => {
             loadedCount++;
-            loadingEl.textContent = `載入中... ${Math.floor((loadedCount / total) * 100)}%`;
+            loadingEl.textContent = `SYSTEM LOADING... ${Math.floor((loadedCount / total) * 100)}%`;
             resolve();
           };
 
@@ -463,11 +553,14 @@
     }
 
     // --- 4. 播放邏輯 ---
-    function playPad(key) {
+    function playPad(key, event = null) {
       if (!isInitialized) return;
 
       const pad = padElements[key];
       if (!pad) return;
+
+      // 觸發視覺特效
+      createRipple(event, pad);
 
       if (!preloadedAudios[key]) {
         triggerVisualError(pad);
@@ -563,16 +656,16 @@
 
     function stopAllPads() {
       runningSounds.forEach(audio => {
-        audio.pause();
-        audio.currentTime = 0;
+          audio.pause();
+          audio.currentTime = 0;
       });
       runningSounds.clear();
       
       Object.keys(padElements).forEach(key => {
         const pad = padElements[key];
         if (pad) {
-          pad.classList.remove('active');
-          pad.querySelector('.progress-bar').style.width = '0%';
+            pad.classList.remove('active');
+            pad.querySelector('.progress-bar').style.width = '0%';
         }
         if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
       });
@@ -611,10 +704,10 @@
           
           const labelEl = pad.querySelector('.pad-label');
           labelEl.textContent = file.name.replace(/\.\w+$/, '');
-          labelEl.style.color = "#00d4ff";
+          labelEl.style.color = "#00f3ff";
           
-          pad.style.borderColor = "#00d4ff";
-          setTimeout(() => pad.style.borderColor = "transparent", 500);
+          pad.style.borderColor = "#00f3ff";
+          setTimeout(() => pad.style.borderColor = "rgba(255,255,255,0.1)", 500);
         } else {
           triggerVisualError(pad);
         }
@@ -642,7 +735,7 @@
       pad.onpointerdown = (e) => {
         e.preventDefault();
         safeSetPointerCapture(pad, e.pointerId);
-        playPad(key);
+        playPad(key, e); // 傳入事件以產生漣漪
       };
       pad.onpointerup = (e) => safeReleasePointerCapture(pad, e.pointerId);
       pad.onpointercancel = (e) => safeReleasePointerCapture(pad, e.pointerId);
@@ -655,7 +748,6 @@
 
     // --- 7. UI 控制與事件監聽 ---
     
-    // 更新音量 (整合 Slider, Input, Presets)
     function updateVolume(val) {
       let v = parseInt(val);
       if (isNaN(v)) v = 80;
@@ -671,7 +763,6 @@
       saveSettings();
     }
 
-    // 更新速度 (整合 Slider, Presets)
     function updatePitch(val) {
       let p = parseFloat(val);
       if (isNaN(p)) p = 1.0;
@@ -689,13 +780,11 @@
       saveSettings();
     }
 
-    // 微調速度 (+/- 按鈕)
     function adjustPitch(delta) {
       let newPitch = appState.playbackRate + delta;
       updatePitch(newPitch);
     }
 
-    // 更新 UI 顯示 (從 AppState 同步)
     function updateUIControls() {
       document.getElementById('volume').value = appState.volume * 100;
       document.getElementById('vol-input').value = Math.round(appState.volume * 100);
@@ -704,13 +793,11 @@
       document.getElementById('pitch-val').textContent = appState.playbackRate + "x";
     }
 
-    // 綁定 Slider 事件
     document.getElementById('volume').oninput = (e) => updateVolume(e.target.value);
     document.getElementById('vol-input').onchange = (e) => updateVolume(e.target.value);
     
     document.getElementById('pitch').oninput = (e) => updatePitch(e.target.value);
 
-    // 【關鍵修正】模式切換 - 處理循環音頻
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.onclick = () => {
         const oldMode = appState.mode;
@@ -719,12 +806,10 @@
         btn.classList.add('active');
         appState.mode = btn.dataset.mode;
         
-        // 如果從循環模式切換出去，停止所有正在循環的音頻
         if (oldMode === 'loop' && appState.mode !== 'loop') {
           stopAllPads();
         }
         
-        // 切換到單次模式也停止所有音頻
         if (appState.mode === 'oneshot') {
           stopAllPads();
         }
@@ -745,7 +830,7 @@
 
       if (PAD_KEYS.includes(key)) {
         e.preventDefault();
-        (e.ctrlKey || e.metaKey) ? stopPad(key) : playPad(key);
+        (e.ctrlKey || e.metaKey) ? stopPad(key) : playPad(key); // 鍵盤觸發沒有 click event，漣漪會出現在中心
       } else if (e.code === "Space") {
         e.preventDefault();
         stopAllPads();
@@ -770,9 +855,9 @@
       
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
       silentAudio.play().then(() => {
-        console.log("✅ 音頻系統已解鎖");
+        console.log("✅ AUDIO SYSTEM ONLINE");
       }).catch(e => {
-        console.warn("⚠️ 音頻解鎖失敗:", e);
+        console.warn("⚠️ AUDIO UNLOCK FAILED:", e);
       });
     };
 
