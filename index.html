@@ -120,7 +120,7 @@
       border: 2px solid transparent;
       background: linear-gradient(#000, #000) padding-box,
                   linear-gradient(45deg, #ff0000, #00ff00, #0000ff, #ff0000) border-box;
-      background-size: 100%, 400%; /* 第一層100%確保黑底，第二層400%做流光 */
+      background-size: 100%, 400%;
       animation: rgbFlow 10s linear infinite;
       color: #fff; font-size: 1.2rem; font-weight: bold;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
@@ -346,7 +346,7 @@
     .pad.drag-over { border-color: #00ff00; background: rgba(0, 255, 0, 0.2); box-shadow: 0 0 20px #00ff00; }
     .pad.error { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; animation: shake 0.3s ease-in-out; }
 
-    /* 鐳射進度條 (RGB 變色) */
+    /* 鐳射進度條 */
     .progress-bar {
       position: absolute; bottom: 0; left: 0; height: 5px;
       background: #fff; width: 0%; opacity: 0;
@@ -423,11 +423,11 @@
         </div>
         <input type="range" id="volume" min="0" max="100" value="80">
         <div class="presets">
-          <button class="preset-btn" onclick="updateVolume(0)">MUTE(0)</button>
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE (0)</button>
           <button class="preset-btn" onclick="updateVolume(30)">30</button>
           <button class="preset-btn" onclick="updateVolume(50)">50</button>
           <button class="preset-btn" onclick="updateVolume(80)">80</button>
-          <button class="preset-btn" onclick="updateVolume(100)">MAX(100)</button>
+          <button class="preset-btn" onclick="updateVolume(100)">MAX (100)</button>
         </div>
       </div>
 
@@ -469,7 +469,7 @@
   <div class="hint">💡 TIP: MULTI-TOUCH / 提示：支援多重音效</div>
 
   <script>
-    // --- 配置常數 (25 鍵) ---
+    // --- 配置常數 ---
     const PAD_KEYS = [
       "1","2","3","4","5",
       "Q","W","E","R","T",
@@ -478,13 +478,38 @@
       "6","7","8","9","0"
     ];
     
-    // 預設檔案 (原有的16個 + 9個空位)
-    const DEFAULT_FILES = [
-      "1_親愛的.mp3", "2_示意停車.mp3", "3_去洪幹幹欸.mp3", "4_黑黑黑黑.mp3", "5_阿珍愛上了阿強.mp3", 
-      "Q_請支援收銀.mp3", "W_For Elise(Oiiai).mp3", "E_John Cena.mp3", "R_星期五晚上.mp3", "T_上車舞BGM.mp3", 
-      "A_Dun Dun Duuuun.mp3", "S_DAMN.mp3", "D_修車找藍丁.mp3", "Empty.mp3", "Empty.mp3",
-       "Empty.mp3", "Empty.mp3", "Empty.mp3", "Empty.mp3", "Empty.mp3",
-      "6_前方車輛請向右避讓.mp3", "7_王老先生有塊地.mp3", "8_Dj Airhorn.mp3", "9_Airhorn.mp3", "0_新幹線エアホーン.mp3"
+    // 【修改】DEFAULT_CONFIG: 包含檔名(file)與顯示名稱(name)
+    // 若該位置為空，將 file 設為 "" 或 "Empty.mp3"，name 設為 "EMPTY"
+    const DEFAULT_CONFIG = [
+      { file: "1.mp3", name: "親愛的" },
+      { file: "2.mp3", name: "示意停車" },
+      { file: "3.mp3", name: "去洪幹幹欸" },
+      { file: "4.mp3", name: "黑黑黑黑" },
+      { file: "5.mp3", name: "阿珍愛上了阿強" },
+      
+      { file: "Q.mp3", name: "請支援收銀" },
+      { file: "W.mp3", name: "給愛麗絲(5121)" },
+      { file: "E.mp3", name: "John Cena" },
+      { file: "R.mp3", name: "星期五晚上" },
+      { file: "T.mp3", name: "上車舞BGM" },
+      
+      { file: "A.mp3", name: "Dun Dun Duuuun" },
+      { file: "S.mp3", name: "DAMN" },
+      { file: "D.mp3", name: "修車找藍丁" },
+      { file: "", name: "EMPTY" }, 
+      { file: "", name: "EMPTY" },
+      
+      { file: "", name: "EMPTY" },
+      { file: "", name: "EMPTY" },
+      { file: "", name: "EMPTY" },
+      { file: "", name: "EMPTY" },
+      { file: "", name: "EMPTY" },
+
+      { file: "6.mp3", name: "前方車輛請向右避讓" },
+      { file: "7.mp3", name: "王老先生有塊地" },
+      { file: "8.mp3", name: "Dj Airhorn" },
+      { file: "9.mp3", name: "Airhorn" },
+      { file: "0.mp3", name: "新幹線エアホーン" }
     ];
 
     const AUDIO_PATH = "audio/";
@@ -500,39 +525,29 @@
 
     const activeAudios = {}; 
     const runningSounds = new Set();
-    
     const preloadedAudios = {};
     const padElements = {};
     const pressedKeys = new Set();
     const progressAnimationIds = {};
     const blobUrls = {};
 
-    function getPadLabel(fname) {
-      if (!fname || fname === "Empty.mp3") return "EMPTY";
-      try { fname = decodeURIComponent(fname); } catch(e){}
-      const match = fname.match(/_(.+)\.\w+$/);
-      return match ? match[1] : fname.replace(/\.\w+$/, '');
+    // 【修改】直接從 Config 物件獲取顯示名稱
+    function getPadLabel(key, idx) {
+      const config = DEFAULT_CONFIG[idx];
+      return config ? config.name : "EMPTY";
     }
 
     function safeSetPointerCapture(el, id) {
-      try { 
-        if (el.hasPointerCapture?.(id)) return; 
-        el.setPointerCapture?.(id); 
-      } catch(e){}
+      try { if (el.hasPointerCapture?.(id)) return; el.setPointerCapture?.(id); } catch(e){}
     }
-    
     function safeReleasePointerCapture(el, id) {
-      try { 
-        if (!el.hasPointerCapture?.(id)) return; 
-        el.releasePointerCapture?.(id); 
-      } catch(e){}
+      try { if (!el.hasPointerCapture?.(id)) return; el.releasePointerCapture?.(id); } catch(e){}
     }
 
     function createRipple(event, element) {
       const circle = document.createElement("span");
       const diameter = Math.max(element.clientWidth, element.clientHeight);
       const radius = diameter / 2;
-
       let x, y;
       if (event && event.clientX) {
         const rect = element.getBoundingClientRect();
@@ -542,39 +557,28 @@
         x = element.clientWidth / 2 - radius;
         y = element.clientHeight / 2 - radius;
       }
-
       circle.style.width = circle.style.height = `${diameter}px`;
       circle.style.left = `${x}px`;
       circle.style.top = `${y}px`;
       circle.classList.add("ripple");
-
       Array.from(element.getElementsByClassName("ripple")).forEach(r => r.remove());
-
-      circle.addEventListener('animationend', () => {
-        circle.remove();
-      });
-
+      circle.addEventListener('animationend', () => circle.remove());
       element.appendChild(circle);
     }
 
-    // --- 背景粒子生成 (RGB 隨機色) ---
     function initParticles() {
       const container = document.getElementById('particles-container');
       const particleCount = 60;
-
       for (let i = 0; i < particleCount; i++) {
         const star = document.createElement('div');
         star.className = 'star';
-        
         const x = Math.random() * 100;
         const y = Math.random() * 100;
         const size = Math.random() * 3 + 1;
         const delay = Math.random() * 5;
         const duration = Math.random() * 3 + 2;
-        
         const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff', '#ffffff'];
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
         star.style.left = `${x}%`;
         star.style.top = `${y}%`;
         star.style.width = `${size}px`;
@@ -583,35 +587,28 @@
         star.style.boxShadow = `0 0 5px ${randomColor}`;
         star.style.animationDelay = `${delay}s`;
         star.style.animationDuration = `${duration}s`;
-
         container.appendChild(star);
       }
     }
 
-    // --- 隨機 Spotlight 循環 (含 RGB 隨機變色) ---
     function autoSpotlightLoop() {
       if (!isInitialized) return;
-
       const count = Math.floor(Math.random() * 4) + 2; 
-      
       const keys = [...PAD_KEYS];
       for (let i = keys.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [keys[i], keys[j]] = [keys[j], keys[i]];
       }
       const selectedKeys = keys.slice(0, count);
-
       selectedKeys.forEach(key => {
         const pad = padElements[key];
         if (pad && !pad.classList.contains('active')) {
           const hue = Math.floor(Math.random() * 360);
           pad.style.setProperty('--spot-color', `hsla(${hue}, 100%, 50%, 0.6)`);
-          
           pad.classList.add('spotlight');
           setTimeout(() => pad.classList.remove('spotlight'), 600);
         }
       });
-
       const nextTime = Math.random() * 1500 + 500;
       setTimeout(autoSpotlightLoop, nextTime);
     }
@@ -622,9 +619,7 @@
         try {
           const parsed = JSON.parse(saved);
           appState = { ...appState, ...parsed }; 
-          
           updateUIControls(); 
-          
           document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === appState.mode);
           });
@@ -646,8 +641,12 @@
 
       const promises = PAD_KEYS.map((key, idx) => {
         return new Promise((resolve) => {
-          const file = DEFAULT_FILES[idx];
-          if (!file || file === "Empty.mp3") {
+          // 【修改】從 Config 物件讀取檔案名稱
+          const config = DEFAULT_CONFIG[idx];
+          const fileName = config?.file || "";
+
+          // 如果沒有檔案或檔案名包含 "Empty" 則跳過
+          if (!fileName || fileName.toLowerCase().includes("empty")) {
               preloadedAudios[key] = null;
               loadedCount++;
               loadingEl.textContent = `SYSTEM LOADING... ${Math.floor((loadedCount / total) * 100)}%`;
@@ -662,39 +661,30 @@
           const done = (success = true) => {
             if (completed) return;
             completed = true;
-            
             clearTimeout(timeoutId);
             audio.oncanplaythrough = null;
             audio.onloadeddata = null;
             audio.onerror = null;
-
             if (success) {
               preloadedAudios[key] = audio;
             } else {
               preloadedAudios[key] = null;
             }
-
             loadedCount++;
             loadingEl.textContent = `SYSTEM LOADING... ${Math.floor((loadedCount / total) * 100)}%`;
             resolve();
           };
 
           audio.oncanplaythrough = () => done(true);
-          audio.onloadeddata = () => {
-            if (audio.readyState >= 2) done(true);
-          };
-          
-          audio.onerror = () => { 
-            console.warn(`⚠️ 缺檔: ${file}`);
-            done(false);
-          };
+          audio.onloadeddata = () => { if (audio.readyState >= 2) done(true); };
+          audio.onerror = () => { console.warn(`⚠️ 缺檔: ${fileName}`); done(false); };
 
           timeoutId = setTimeout(() => {
-            console.warn(`⚠️ 載入超時: ${file}`);
+            console.warn(`⚠️ 載入超時: ${fileName}`);
             done(false);
           }, LOAD_TIMEOUT);
 
-          audio.src = AUDIO_PATH + file;
+          audio.src = AUDIO_PATH + fileName;
           audio.preload = 'auto';
           audio.load();
         });
@@ -705,51 +695,36 @@
     }
 
     function startProgressAnimation(key, audioInstance) {
-      if (progressAnimationIds[key]) {
-        cancelAnimationFrame(progressAnimationIds[key]);
-      }
-
+      if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
       const pad = padElements[key];
       const progressBar = pad.querySelector('.progress-bar');
-
       const update = () => {
         if (activeAudios[key] !== audioInstance) return;
-
         if (audioInstance.duration && Number.isFinite(audioInstance.duration)) {
           const pct = (audioInstance.currentTime / audioInstance.duration) * 100;
           progressBar.style.width = `${pct}%`;
         }
-
         if (!audioInstance.paused && !audioInstance.ended) {
           progressAnimationIds[key] = requestAnimationFrame(update);
         }
       };
-
       progressAnimationIds[key] = requestAnimationFrame(update);
     }
 
     function playPad(key, event = null) {
       if (!isInitialized) return;
-
       const pad = padElements[key];
       if (!pad) return;
-
       createRipple(event, pad);
-      
       pad.classList.remove('spotlight');
 
       if (!preloadedAudios[key]) {
         triggerVisualError(pad);
         return;
       }
-
-      if (appState.mode === "oneshot") {
-        stopAllPads(); 
-      } else if (appState.mode === "loop") {
-        if (activeAudios[key]) {
-          stopPad(key); 
-          return;
-        }
+      if (appState.mode === "oneshot") stopAllPads();
+      else if (appState.mode === "loop") {
+        if (activeAudios[key]) { stopPad(key); return; }
       } 
 
       const sourceAudio = preloadedAudios[key];
@@ -760,13 +735,11 @@
       audio.playbackRate = appState.playbackRate;
       audio.loop = (appState.mode === "loop");
       audio._padKey = key;
-
       runningSounds.add(audio);
 
       audio.onended = () => {
         runningSounds.delete(audio);
         const remainingSounds = [...runningSounds].filter(a => a._padKey === key);
-
         if (activeAudios[key] === audio) {
           if (remainingSounds.length > 0) {
             const nextAudio = remainingSounds[remainingSounds.length - 1];
@@ -790,21 +763,17 @@
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            if (activeAudios[key] === audio) {
-              startProgressAnimation(key, audio);
-            }
-          })
-          .catch(err => {
-            console.error(`播放失敗: ${key}`, err);
-            runningSounds.delete(audio);
-            if (activeAudios[key] === audio) {
-              pad.classList.remove('active');
-              delete activeAudios[key];
-              triggerVisualError(pad);
-            }
-          });
+        playPromise.then(() => {
+          if (activeAudios[key] === audio) startProgressAnimation(key, audio);
+        }).catch(err => {
+          console.error(`播放失敗: ${key}`, err);
+          runningSounds.delete(audio);
+          if (activeAudios[key] === audio) {
+            pad.classList.remove('active');
+            delete activeAudios[key];
+            triggerVisualError(pad);
+          }
+        });
       }
     }
 
@@ -816,12 +785,10 @@
           runningSounds.delete(audio);
         }
       });
-      
       if (progressAnimationIds[key]) {
         cancelAnimationFrame(progressAnimationIds[key]);
         delete progressAnimationIds[key];
       }
-      
       const pad = padElements[key];
       if (pad) {
         pad.classList.remove('active');
@@ -836,7 +803,6 @@
           audio.currentTime = 0;
       });
       runningSounds.clear();
-      
       Object.keys(padElements).forEach(key => {
         const pad = padElements[key];
         if (pad) {
@@ -845,7 +811,6 @@
         }
         if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
       });
-      
       for (const key in activeAudios) delete activeAudios[key];
     }
 
@@ -861,26 +826,21 @@
       pad.ondrop = (e) => {
         e.preventDefault();
         pad.classList.remove('drag-over');
-
         const file = e.dataTransfer.files[0];
         if (file && (file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|ogg|m4a)$/i))) {
           if (blobUrls[key]) {
             URL.revokeObjectURL(blobUrls[key]);
             delete blobUrls[key];
           }
-
           const objectUrl = URL.createObjectURL(file);
           blobUrls[key] = objectUrl;
-          
           const newAudio = new Audio(objectUrl);
           newAudio.preload = 'auto';
-          
           preloadedAudios[key] = newAudio;
           
           const labelEl = pad.querySelector('.pad-label');
           labelEl.textContent = file.name.replace(/\.\w+$/, '');
           labelEl.style.color = "#00f3ff";
-          
           pad.style.borderColor = "#00f3ff";
           setTimeout(() => pad.style.borderColor = "rgba(255,255,255,0.1)", 500);
         } else {
@@ -889,23 +849,20 @@
       };
     }
 
+    // --- 6. DOM 初始化 (更新標籤獲取方式) ---
     const padGrid = document.getElementById('padGrid');
-    
     PAD_KEYS.forEach((key, idx) => {
-      const fname = DEFAULT_FILES[idx];
       const pad = document.createElement('div');
-      
       pad.className = "pad";
+      // 【修正】使用新的 getPadLabel 函數 (傳入 key 和 index)
       pad.innerHTML = `
         <strong>${key}</strong>
-        <div class="pad-label">${getPadLabel(fname)}</div>
+        <div class="pad-label">${getPadLabel(key, idx)}</div>
         <div class="progress-bar"></div>
       `;
-      
       pad.setAttribute('role', 'button');
       pad.setAttribute('aria-label', `播放 ${key}`);
       pad.tabIndex = 0;
-
       pad.onpointerdown = (e) => {
         e.preventDefault();
         safeSetPointerCapture(pad, e.pointerId);
@@ -913,9 +870,7 @@
       };
       pad.onpointerup = (e) => safeReleasePointerCapture(pad, e.pointerId);
       pad.onpointercancel = (e) => safeReleasePointerCapture(pad, e.pointerId);
-
       setupDragAndDrop(pad, key);
-
       padGrid.appendChild(pad);
       padElements[key] = pad;
     });
@@ -925,12 +880,9 @@
       if (isNaN(v)) v = 80;
       if (v < 0) v = 0;
       if (v > 100) v = 100;
-      
       appState.volume = v / 100;
-      
       document.getElementById('volume').value = v;
       document.getElementById('vol-input').value = v;
-      
       runningSounds.forEach(audio => audio.volume = appState.volume);
       saveSettings();
     }
@@ -940,14 +892,10 @@
       if (isNaN(p)) p = 1.0;
       if (p < 0.5) p = 0.5;
       if (p > 2.0) p = 2.0;
-      
       p = parseFloat(p.toFixed(1));
-
       appState.playbackRate = p;
-      
       document.getElementById('pitch').value = p;
       document.getElementById('pitch-val').textContent = p + "x";
-      
       runningSounds.forEach(audio => audio.playbackRate = appState.playbackRate);
       saveSettings();
     }
@@ -960,27 +908,22 @@
     function updateUIControls() {
       document.getElementById('volume').value = appState.volume * 100;
       document.getElementById('vol-input').value = Math.round(appState.volume * 100);
-      
       document.getElementById('pitch').value = appState.playbackRate;
       document.getElementById('pitch-val').textContent = appState.playbackRate + "x";
     }
 
     document.getElementById('volume').oninput = (e) => updateVolume(e.target.value);
     document.getElementById('vol-input').onchange = (e) => updateVolume(e.target.value);
-    
     document.getElementById('pitch').oninput = (e) => updatePitch(e.target.value);
 
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.onclick = () => {
         const newMode = btn.dataset.mode;
-        
         if (appState.mode !== newMode) {
            stopAllPads();
            appState.mode = newMode;
-           
            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
            btn.classList.add('active');
-           
            saveSettings();
         }
       };
@@ -990,11 +933,9 @@
       if (!isInitialized) return;
       if (e.isComposing || e.keyCode === 229) return;
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-
       const key = e.key.toUpperCase();
       if (pressedKeys.has(key)) return;
       pressedKeys.add(key);
-
       if (PAD_KEYS.includes(key)) {
         e.preventDefault();
         (e.ctrlKey || e.metaKey) ? stopPad(key) : playPad(key); 
