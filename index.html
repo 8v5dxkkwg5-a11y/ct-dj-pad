@@ -29,6 +29,7 @@
       overflow-x: hidden;
       padding: 20px 0; /* 上下留白，確保內容不貼邊 */
       box-sizing: border-box;
+      position: relative;
     }
 
     /* 動態背景網格特效 */
@@ -41,8 +42,30 @@
       background-size: 50px 50px;
       transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
       animation: gridMove 20s linear infinite;
-      z-index: -1;
+      z-index: -2;
       pointer-events: none;
+    }
+
+    /* 背景粒子容器 */
+    #particles-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1; pointer-events: none; overflow: hidden;
+    }
+    
+    /* 單個粒子樣式 */
+    .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0;
+      animation: twinkle linear infinite;
+      box-shadow: 0 0 5px #fff;
+    }
+
+    @keyframes twinkle {
+      0% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 0.8; transform: scale(1.2); }
+      100% { opacity: 0; transform: scale(0.5); }
     }
 
     @keyframes gridMove {
@@ -227,7 +250,7 @@
         0 4px 6px rgba(0,0,0,0.3), 
         inset 0 1px 0 rgba(255,255,255,0.1),
         inset 0 0 20px rgba(0,0,0,0.5);
-      transition: all 0.1s;
+      transition: transform 0.1s, background 0.1s, border-color 0.1s;
     }
 
     /* Pad 內部發光字體 */
@@ -249,7 +272,7 @@
     
     .pad.active {
       border-color: #fff;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.15);
       box-shadow: 
         0 0 10px var(--neon-blue),
         0 0 20px var(--neon-blue),
@@ -258,26 +281,30 @@
       z-index: 10;
       animation: padPulse 0.1s ease-out;
     }
+
+    /* 隨機 Spotlight 效果 (不干擾 Active 狀態) */
+    .pad.spotlight {
+      animation: spotlightFlash 0.6s ease-out;
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+    .pad.spotlight strong {
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 0 8px #fff;
+    }
+
+    @keyframes spotlightFlash {
+      0% { background: rgba(255, 255, 255, 0.2); box-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.02); }
+      100% { background: rgba(30, 30, 40, 0.6); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transform: scale(1); }
+    }
     
     @keyframes padPulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(0.98); }
-      100% { transform: scale(1); }
+      0% { transform: scale(1); } 50% { transform: scale(0.98); } 100% { transform: scale(1); }
     }
 
-    .pad.active strong {
-      color: #fff;
-      text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue);
-    }
+    .pad.active strong { color: #fff; text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue); }
     .pad.active .pad-label { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
-
     .pad.drag-over { border-color: var(--neon-pink); background: rgba(255, 0, 255, 0.1); }
-    
-    .pad.error {
-      border-color: #ff0000;
-      box-shadow: 0 0 20px #ff0000;
-      animation: shake 0.3s ease-in-out;
-    }
+    .pad.error { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; animation: shake 0.3s ease-in-out; }
 
     /* 鐳射進度條 */
     .progress-bar {
@@ -297,9 +324,7 @@
       background: rgba(255, 255, 255, 0.3);
       pointer-events: none;
     }
-    @keyframes ripple {
-      to { transform: scale(4); opacity: 0; }
-    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
     /* --- 其他 --- */
     .loading { 
@@ -315,9 +340,7 @@
     }
 
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
+      0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); }
     }
 
     @media (max-width: 600px) {
@@ -332,12 +355,14 @@
 </head>
 <body>
 
+  <div id="particles-container"></div>
+
   <div id="startOverlay">
     <h2>🎵 Web DJ Pad 🎵</h2>
     <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
     <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:var(--neon-blue); font-family:monospace; text-align:center; line-height: 1.6;">
-      > POLYPHONY MODE: ACTIVE / 支援多重音效 <br>
-      > NEON ENGINE: ONLINE / 霓虹引擎上線
+      > POLYPHONY MODE: ACTIVE / 支援多重音效 < <br>
+      > NEON ENGINE: ONLINE / 霓虹引擎上線 <
     </p>
   </div>
 
@@ -478,6 +503,65 @@
       element.appendChild(circle);
     }
 
+    // --- 背景粒子生成 ---
+    function initParticles() {
+      const container = document.getElementById('particles-container');
+      const particleCount = 60; // 粒子數量
+
+      for (let i = 0; i < particleCount; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // 隨機位置
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        // 隨機大小
+        const size = Math.random() * 3 + 1;
+        // 隨機動畫延遲與時長
+        const delay = Math.random() * 5;
+        const duration = Math.random() * 3 + 2;
+
+        star.style.left = `${x}%`;
+        star.style.top = `${y}%`;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.animationDelay = `${delay}s`;
+        star.style.animationDuration = `${duration}s`;
+
+        container.appendChild(star);
+      }
+    }
+
+    // --- 隨機 Spotlight 循環 ---
+    function autoSpotlightLoop() {
+      if (!isInitialized) return;
+
+      // 隨機決定要閃幾個 (2 到 5 個)
+      const count = Math.floor(Math.random() * 4) + 2; 
+      
+      // 洗牌算法取得隨機鍵值
+      const keys = [...PAD_KEYS];
+      for (let i = keys.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [keys[i], keys[j]] = [keys[j], keys[i]];
+      }
+      const selectedKeys = keys.slice(0, count);
+
+      selectedKeys.forEach(key => {
+        const pad = padElements[key];
+        // 如果目前不是 active (避免干擾正在操作的按鍵)，就加上 spotlight 樣式
+        if (pad && !pad.classList.contains('active')) {
+          pad.classList.add('spotlight');
+          // 動畫時間結束後移除
+          setTimeout(() => pad.classList.remove('spotlight'), 600);
+        }
+      });
+
+      // 設定下一次觸發的時間 (隨機 0.5s ~ 2.0s)
+      const nextTime = Math.random() * 1500 + 500;
+      setTimeout(autoSpotlightLoop, nextTime);
+    }
+
     // --- 1. 設定管理 (LocalStorage) ---
     function loadSettings() {
       const saved = localStorage.getItem('djPadSettingsPro');
@@ -570,6 +654,9 @@
 
       // 觸發視覺特效
       createRipple(event, pad);
+      
+      // 【關鍵修正】移除 spotlight 類別，避免視覺衝突
+      pad.classList.remove('spotlight');
 
       if (!preloadedAudios[key]) {
         triggerVisualError(pad);
@@ -745,7 +832,7 @@
       pad.onpointerdown = (e) => {
         e.preventDefault();
         safeSetPointerCapture(pad, e.pointerId);
-        playPad(key, e); // 傳入事件以產生漣漪
+        playPad(key, e);
       };
       pad.onpointerup = (e) => safeReleasePointerCapture(pad, e.pointerId);
       pad.onpointercancel = (e) => safeReleasePointerCapture(pad, e.pointerId);
@@ -838,7 +925,7 @@
 
       if (PAD_KEYS.includes(key)) {
         e.preventDefault();
-        (e.ctrlKey || e.metaKey) ? stopPad(key) : playPad(key); // 鍵盤觸發沒有 click event，漣漪會出現在中心
+        (e.ctrlKey || e.metaKey) ? stopPad(key) : playPad(key); 
       } else if (e.code === "Space") {
         e.preventDefault();
         stopAllPads();
@@ -861,6 +948,10 @@
       overlay.style.opacity = '0';
       setTimeout(() => overlay.style.display = 'none', 500);
       
+      // 啟動特效
+      initParticles();
+      autoSpotlightLoop();
+
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
       silentAudio.play().then(() => {
         console.log("✅ AUDIO SYSTEM ONLINE");
