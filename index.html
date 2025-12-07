@@ -1,52 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎵 Web DJ Pad 🎵</title>
+  <style>
+    body {background: #1a1a2e; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0;}
+    h1 {text-align: center; color: #00d4ff; margin-top: 32px;}
+    .panel {display: flex; justify-content: center; gap: 36px; margin: 24px 0;}
+    .panel label {display:inline-flex;align-items:center;gap:8px;}
+    .grid {display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; max-width: 500px; margin: 0 auto;}
+    .pad {background:linear-gradient(145deg,#2a2a3a,#1a1a2a); border-radius:18px; min-height:90px; display:flex;flex-direction:column;align-items:center; justify-content:center; cursor:pointer; font-size:1.4rem; user-select:none; box-shadow:0 8px 25px rgba(0,0,0,0.3); transition:.2s;}
+    .pad:active {background:linear-gradient(145deg,#00d4ff,#ff4081);}
+    .pad-label {font-size:1rem; margin-top:4px;}
+    .mode-btn {padding:8px 18px; border:none; border-radius:12px; margin:0 2px; cursor:pointer; background:#222; color:#eee;}
+    .mode-btn.active {background:linear-gradient(45deg,#00d4ff,#ff4081); color:#fff;}
+    .volume-slider {width:120px;}
+  </style>
+</head>
+<body>
+  <h1>🎵 Web DJ Pad 🎵</h1>
+  <div class="panel">
+    <label>🔊 音量 <input type="range" id="volume" class="volume-slider" min="0" max="100" value="80"></label>
+    <label>模式
+      <button class="mode-btn active" data-mode="normal">標準</button>
+      <button class="mode-btn" data-mode="loop">循環</button>
+      <button class="mode-btn" data-mode="oneshot">單次</button>
+    </label>
+  </div>
+  <div class="grid" id="padGrid"></div>
+  <script>
+    // PAD key 設定與檔案路徑
+    const padKeys = ["1","2","3","4","Q","W","E","R","A","S","D","F","Z","X","C","V"];
+    const padLabels = padKeys.map((k,i) => `Pad ${i+1} (${k})`);
+    // 音效路徑範例：audio/1.mp3, audio/Q.mp3 ...
+    const padSounds = padKeys.map(k => `audio/${k}.mp3`);
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AVM</title>
-        <style>
-            button {
-                -webkit-tap-highlight-color: rgba(0,0,0,0);
-            }
-        </style>
-    </head>
+    // 播放參數
+    let playMode = "normal"; // normal, loop, oneshot
+    let volume = 0.8;
+    let activeAudios = {};
 
-    <body style="background: black;overflow: hidden;">
-        <audio id="osc" src="audio/process/touch.mp3" hidden></audio>
-        <audio id="narrator" hidden></audio>
-        <div style="display: flex;flex-direction: row;margin-top: 5dvh;margin-bottom: 5dvh;">
-            <div
-                style="background: black;aspect-ratio: 4/3;height: 90dvh;display: flex;margin-left: calc((100vw - (90dvh * 4 / 3))/2);">
-                <iframe style="width: 100%;aspect-ratio: 4/3;" src="pages/home.html"></iframe>
-            </div>
-            <div style="height: 90dvh;display: flex;width: calc((100vw - (90dvh * 4 / 3))/2);">
-                <iframe style="width: 100%;background: #333;border: none;">
+    // 主音量控制
+    const volumeSlider = document.getElementById('volume');
+    volumeSlider.oninput = e => volume = e.target.value / 100;
 
-                </iframe>
-            </div>
-        </div>
-        <script>
-            function touchSound() {
-                document.getElementById("osc").play()
-                // var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-                // var oscillator = audioCtx.createOscillator();
+    // 模式切換
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        playMode = btn.dataset.mode;
+      }
+    });
 
-                // oscillator.type = 'square';
-                // oscillator.frequency.value = 2200; // value in hertz
-                // oscillator.connect(audioCtx.destination);
-                // oscillator.start();
+    // 組件生成
+    const padGrid = document.getElementById('padGrid');
+    padKeys.forEach((key, idx) => {
+      const pad = document.createElement('div');
+      pad.className = "pad";
+      pad.tabIndex = 0;
+      pad.innerHTML = `<strong>${key}</strong><div class="pad-label">${padLabels[idx]}</div>`;
+      pad.onclick = () => playPad(key, idx);
+      padGrid.appendChild(pad);
+    });
 
-                // setTimeout(
-                //     function () {
-                //         oscillator.stop();
-                //     }, 100);
-            }
-            function narrate(type, name) {
-                document.getElementById("narrator").src = "audio/" + type + "/" + name + ".mp3"
-                document.getElementById("narrator").play()
-             }
-        </script>
-    </body>
+    // 播放主函式
+    function playPad(key, idx){
+      // 單次模式，全部停止
+      if(playMode==="oneshot") stopAllPads();
 
+      // 迴圈模式: 若有在播則停掉
+      if(playMode==="loop" && activeAudios[key]){
+        stopPad(key);
+        return;
+      }
+
+      stopPad(key);
+      const pad = padGrid.children[idx];
+      pad.classList.add('active');
+      const audio = new Audio(padSounds[idx]);
+      audio.volume = volume;
+      audio.onended = () => { pad.classList.remove('active'); delete activeAudios[key];};
+      if(playMode==="loop") audio.loop = true;
+      activeAudios[key]=audio;
+      audio.play();
+    }
+
+    // 停止某 pad
+    function stopPad(key){
+      if(activeAudios[key]){
+        activeAudios[key].pause();
+        activeAudios[key].currentTime = 0;
+        delete activeAudios[key];
+      }
+      Array.from(padGrid.children).forEach(pad=>{
+        if(pad.querySelector("strong").textContent===key) pad.classList.remove('active');
+      });
+    }
+
+    function stopAllPads(){
+      Object.keys(activeAudios).forEach(stopPad);
+    }
+
+    // 鍵盤快捷鍵支援
+    document.addEventListener('keydown', e=>{
+      const key = e.key.toUpperCase();
+      const idx = padKeys.indexOf(key);
+      if(idx>=0) playPad(key, idx);
+      // Space 停止全部
+      if(e.code==="Space") stopAllPads();
+      // Ctrl+按 pad 停止此 pad
+      if(idx>=0 && (e.ctrlKey||e.metaKey)) stopPad(key);
+    });
+  </script>
+</body>
 </html>
