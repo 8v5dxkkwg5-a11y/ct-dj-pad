@@ -67,13 +67,11 @@
       border-radius: 50%;
       opacity: 0;
       animation: twinkle linear infinite;
-      box-shadow: 0 0 5px #fff;
+      /* box-shadow 由 JS 動態控制顏色 */
     }
 
     @keyframes twinkle {
-      0% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 2px rgba(255,0,0,0.8); }
-      33% { box-shadow: 0 0 4px rgba(0,255,0,0.8); }
-      66% { box-shadow: 0 0 4px rgba(0,0,255,0.8); }
+      0% { opacity: 0; transform: scale(0.5); }
       50% { opacity: 1; transform: scale(1.5); }
       100% { opacity: 0; transform: scale(0.5); }
     }
@@ -292,6 +290,18 @@
       text-transform: uppercase; letter-spacing: 1px;
     }
 
+    /* 空按鍵樣式 */
+    .pad.empty {
+      opacity: 0.3;
+      border-color: rgba(255, 255, 255, 0.05);
+      background: rgba(20, 20, 20, 0.5);
+      cursor: default;
+      box-shadow: none;
+    }
+    .pad.empty strong { color: rgba(255, 255, 255, 0.1); }
+    .pad.empty .pad-label { color: rgba(255, 255, 255, 0.1); }
+    .pad.empty .progress-bar { display: none; }
+
     .pad:active { transform: scale(0.95); }
     
     /* Pad 被觸發時的 RGB 瘋狂變色效果 */
@@ -312,7 +322,7 @@
       100% { background-color: rgba(148, 0, 211, 0.4); box-shadow: 0 0 30px rgba(148, 0, 211, 0.6); }
     }
 
-    /* 隨機 Spotlight 效果 (使用 CSS 變數) */
+    /* 隨機 Spotlight 效果 */
     .pad.spotlight {
       --spot-color: rgba(255, 255, 255, 0.8);
       animation: spotlightFlash 0.6s ease-out;
@@ -423,11 +433,11 @@
         </div>
         <input type="range" id="volume" min="0" max="100" value="80">
         <div class="presets">
-          <button class="preset-btn" onclick="updateVolume(0)">MUTE (0)</button>
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE(0)</button>
           <button class="preset-btn" onclick="updateVolume(30)">30</button>
           <button class="preset-btn" onclick="updateVolume(50)">50</button>
           <button class="preset-btn" onclick="updateVolume(80)">80</button>
-          <button class="preset-btn" onclick="updateVolume(100)">MAX (100)</button>
+          <button class="preset-btn" onclick="updateVolume(100)">MAX(100)</button>
         </div>
       </div>
 
@@ -478,8 +488,8 @@
       "6","7","8","9","0"
     ];
     
-    // 【修改】DEFAULT_CONFIG: 包含檔名(file)與顯示名稱(name)
-    // 若該位置為空，將 file 設為 "" 或 "Empty.mp3"，name 設為 "EMPTY"
+    // 【配置物件】{ file: "檔案名", name: "顯示名稱" }
+    // 檔名可以是任何名稱 (e.g. "1.mp3", "beat_01.wav")，無需包含中文
     const DEFAULT_CONFIG = [
       { file: "1.mp3", name: "親愛的" },
       { file: "2.mp3", name: "示意停車" },
@@ -488,7 +498,7 @@
       { file: "5.mp3", name: "阿珍愛上了阿強" },
       
       { file: "Q.mp3", name: "請支援收銀" },
-      { file: "W.mp3", name: "給愛麗絲(5121)" },
+      { file: "W.mp3", name: "給愛麗絲(51121)" },
       { file: "E.mp3", name: "John Cena" },
       { file: "R.mp3", name: "星期五晚上" },
       { file: "T.mp3", name: "上車舞BGM" },
@@ -531,7 +541,6 @@
     const progressAnimationIds = {};
     const blobUrls = {};
 
-    // 【修改】直接從 Config 物件獲取顯示名稱
     function getPadLabel(key, idx) {
       const config = DEFAULT_CONFIG[idx];
       return config ? config.name : "EMPTY";
@@ -602,7 +611,8 @@
       const selectedKeys = keys.slice(0, count);
       selectedKeys.forEach(key => {
         const pad = padElements[key];
-        if (pad && !pad.classList.contains('active')) {
+        // 【修正】只對非 active 且非 empty 的按鍵進行隨機閃爍
+        if (pad && !pad.classList.contains('active') && !pad.classList.contains('empty')) {
           const hue = Math.floor(Math.random() * 360);
           pad.style.setProperty('--spot-color', `hsla(${hue}, 100%, 50%, 0.6)`);
           pad.classList.add('spotlight');
@@ -641,12 +651,11 @@
 
       const promises = PAD_KEYS.map((key, idx) => {
         return new Promise((resolve) => {
-          // 【修改】從 Config 物件讀取檔案名稱
           const config = DEFAULT_CONFIG[idx];
           const fileName = config?.file || "";
 
-          // 如果沒有檔案或檔案名包含 "Empty" 則跳過
-          if (!fileName || fileName.toLowerCase().includes("empty")) {
+          // 【空槽位檢查】
+          if (!config || !fileName || config.name === "EMPTY") {
               preloadedAudios[key] = null;
               loadedCount++;
               loadingEl.textContent = `SYSTEM LOADING... ${Math.floor((loadedCount / total) * 100)}%`;
@@ -715,6 +724,12 @@
       if (!isInitialized) return;
       const pad = padElements[key];
       if (!pad) return;
+
+      // 【空按鍵保護】
+      if (pad.classList.contains('empty')) {
+        return; 
+      }
+
       createRipple(event, pad);
       pad.classList.remove('spotlight');
 
@@ -842,6 +857,9 @@
           labelEl.textContent = file.name.replace(/\.\w+$/, '');
           labelEl.style.color = "#00f3ff";
           pad.style.borderColor = "#00f3ff";
+          // 【拖曳後移除 EMPTY 狀態】
+          pad.classList.remove('empty');
+          
           setTimeout(() => pad.style.borderColor = "rgba(255,255,255,0.1)", 500);
         } else {
           triggerVisualError(pad);
@@ -849,15 +867,20 @@
       };
     }
 
-    // --- 6. DOM 初始化 (更新標籤獲取方式) ---
     const padGrid = document.getElementById('padGrid');
     PAD_KEYS.forEach((key, idx) => {
       const pad = document.createElement('div');
       pad.className = "pad";
-      // 【修正】使用新的 getPadLabel 函數 (傳入 key 和 index)
+      const label = getPadLabel(key, idx);
+      
+      // 【初始化時檢查 EMPTY 狀態】
+      if (label === "EMPTY") {
+        pad.classList.add('empty');
+      }
+
       pad.innerHTML = `
         <strong>${key}</strong>
-        <div class="pad-label">${getPadLabel(key, idx)}</div>
+        <div class="pad-label">${label}</div>
         <div class="progress-bar"></div>
       `;
       pad.setAttribute('role', 'button');
