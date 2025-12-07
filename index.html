@@ -5,17 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>🎵 Web DJ Pad 🎵</title>
   <style>
-    /* --- 1. 超華麗基礎設定 --- */
+    /* --- 1. RGB 電競風格設定 --- */
     :root {
-      --neon-blue: #00f3ff;
-      --neon-pink: #ff00ff;
-      --neon-purple: #bc13fe;
-      --glass-bg: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-bg: rgba(20, 20, 30, 0.7);
+    }
+
+    /* 定義 RGB 流光動畫 */
+    @keyframes rgbFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 定義色相旋轉動畫 */
+    @keyframes hueCycle {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
     }
 
     body {
-      background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 50%, #000000 100%);
+      background: #000;
       color: #fff;
       font-family: 'Segoe UI', system-ui, sans-serif;
       margin: 0;
@@ -24,24 +33,24 @@
       overscroll-behavior: none;
       display: flex;
       flex-direction: column;
-      align-items: center; /* 水平置中 */
+      align-items: center;
       min-height: 100vh;
       overflow-x: hidden;
-      padding: 20px 0; /* 上下留白，確保內容不貼邊 */
+      padding: 20px 0;
       box-sizing: border-box;
       position: relative;
     }
 
-    /* 動態背景網格特效 */
+    /* 動態背景網格 - 加入 RGB 變色 */
     body::before {
       content: "";
       position: fixed; top: 0; left: 0; width: 200%; height: 200%;
       background-image: 
-        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
       background-size: 50px 50px;
       transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
-      animation: gridMove 20s linear infinite;
+      animation: gridMove 20s linear infinite, hueCycle 30s linear infinite;
       z-index: -2;
       pointer-events: none;
     }
@@ -52,7 +61,6 @@
       z-index: -1; pointer-events: none; overflow: hidden;
     }
     
-    /* 單個粒子樣式 */
     .star {
       position: absolute;
       background: #fff;
@@ -63,8 +71,10 @@
     }
 
     @keyframes twinkle {
-      0% { opacity: 0; transform: scale(0.5); }
-      50% { opacity: 0.8; transform: scale(1.2); }
+      0% { opacity: 0; transform: scale(0.5); box-shadow: 0 0 2px rgba(255,0,0,0.8); }
+      33% { box-shadow: 0 0 4px rgba(0,255,0,0.8); }
+      66% { box-shadow: 0 0 4px rgba(0,0,255,0.8); }
+      50% { opacity: 1; transform: scale(1.5); }
       100% { opacity: 0; transform: scale(0.5); }
     }
 
@@ -73,157 +83,174 @@
       100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); }
     }
 
+    /* RGB 標題 */
     h1 {
       text-align: center;
-      color: #fff;
       margin: 0 0 20px 0;
       font-weight: 900;
       font-size: 2.2rem;
       letter-spacing: 2px;
       text-transform: uppercase;
-      text-shadow: 
-        0 0 5px #fff,
-        0 0 10px #fff,
-        0 0 20px var(--neon-blue),
-        0 0 40px var(--neon-blue);
-      animation: titlePulse 2s infinite alternate;
+      background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+      background-size: 400%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: rgbFlow 8s linear infinite;
       z-index: 10;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
     }
 
-    @keyframes titlePulse {
-      0% { text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue); }
-      100% { text-shadow: 0 0 20px #fff, 0 0 40px var(--neon-blue), 0 0 80px var(--neon-purple); }
-    }
-
-    /* --- 2. 啟動遮罩 (Cyberpunk Style) --- */
+    /* --- 2. 啟動遮罩 (RGB Style) --- */
     #startOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
       display: flex; flex-direction: column; justify-content: center; align-items: center;
       z-index: 9999;
       transition: opacity 0.5s;
     }
     #startOverlay h2 { 
       color: #fff; margin-bottom: 40px; font-size: 2.5rem; 
-      text-shadow: 0 0 20px var(--neon-pink);
+      text-shadow: 0 0 10px #fff, 0 0 20px #ff00ff, 0 0 30px #00ffff;
+      animation: hueCycle 5s infinite linear;
     }
     .start-btn {
-      padding: 20px 60px; border-radius: 50px; border: 2px solid var(--neon-blue);
-      background: transparent;
-      color: var(--neon-blue); font-size: 1.2rem; font-weight: bold;
-      box-shadow: 0 0 15px var(--neon-blue), inset 0 0 15px var(--neon-blue);
+      padding: 20px 60px; border-radius: 50px; 
+      border: 2px solid transparent;
+      background: linear-gradient(#000, #000) padding-box,
+                  linear-gradient(45deg, #ff0000, #00ff00, #0000ff, #ff0000) border-box;
+      background-size: 400%;
+      animation: rgbFlow 10s linear infinite;
+      color: #fff; font-size: 1.2rem; font-weight: bold;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
       cursor: pointer;
-      transition: all 0.3s;
+      transition: transform 0.2s;
       text-transform: uppercase;
       letter-spacing: 2px;
       position: relative;
       overflow: hidden;
     }
     .start-btn:hover {
-      background: var(--neon-blue);
-      color: #000;
-      box-shadow: 0 0 50px var(--neon-blue);
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+      transform: scale(1.05);
     }
 
-    /* --- 3. 控制面板 (Holographic Glass) --- */
+    /* --- 3. 控制面板 (RGB Border) --- */
     .panel {
-      background: rgba(20, 20, 30, 0.6);
+      /* [修正] 移除這行 background，避免與 ::after 的背景疊加導致太黑 */
+      /* background: var(--glass-bg); */
+      
       padding: 20px;
       margin: 0 15px 20px 15px;
       border-radius: 20px;
       display: flex; flex-direction: column; gap: 20px;
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
-      z-index: 10;
+      backdrop-filter: blur(20px);
       position: relative;
       width: 100%;
       max-width: 600px;
       box-sizing: border-box;
+      z-index: 10;
     }
-    /* 裝飾線條 */
+    
+    /* RGB 流光邊框 */
+    .panel::before {
+      content: "";
+      position: absolute;
+      top: -3px; left: -3px; right: -3px; bottom: -3px;
+      background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+      background-size: 400%;
+      z-index: -2;
+      border-radius: 22px;
+      animation: rgbFlow 20s linear infinite;
+      opacity: 0.8;
+      filter: blur(10px);
+    }
+    /* 實體邊框遮罩 (這裡負責玻璃背景色) */
     .panel::after {
-      content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-      width: 80%; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--glass-bg);
+      border-radius: 20px;
+      z-index: -1;
     }
 
-    .controls-row {
-      display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
-    }
+    .controls-row { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
 
     .control-block {
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.5);
       padding: 15px; border-radius: 15px;
       display: flex; flex-direction: column; gap: 10px;
       flex: 1; min-width: 250px;
-      border: 1px solid rgba(255,255,255,0.05);
-      transition: transform 0.2s;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
     }
-    .control-block:hover { border-color: rgba(255,255,255,0.2); }
 
     .block-header {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.85rem; color: var(--neon-blue); font-weight: 700; text-transform: uppercase;
+      font-size: 0.85rem; color: #fff; font-weight: 700; text-transform: uppercase;
       letter-spacing: 1px;
+      text-shadow: 0 0 5px rgba(255,255,255,0.5);
     }
 
     .value-adjuster { display: flex; align-items: center; gap: 10px; }
 
     .val-input {
-      background: rgba(0,0,0,0.5); border: 1px solid var(--neon-blue);
-      color: #fff; width: 50px; text-align: center; border-radius: 5px;
+      background: rgba(0,0,0,0.8); border: 1px solid #555;
+      color: #00f3ff; width: 50px; text-align: center; border-radius: 5px;
       padding: 4px; font-weight: bold; font-family: monospace;
-      box-shadow: 0 0 5px var(--neon-blue);
+      box-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
     }
 
     .adj-btn {
       width: 28px; height: 28px; border-radius: 50%;
-      border: 1px solid var(--neon-blue); background: rgba(0, 243, 255, 0.1);
-      color: var(--neon-blue); cursor: pointer;
+      border: 1px solid #555; background: #222;
+      color: #00f3ff; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .adj-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
+    .adj-btn:hover { background: #00f3ff; color: #000; box-shadow: 0 0 10px #00f3ff; }
 
-    /* 霓虹滑桿 */
+    /* RGB 滑桿軌道 */
     input[type=range] {
       -webkit-appearance: none; width: 100%; height: 6px;
-      background: #333; border-radius: 3px; outline: none; margin: 10px 0;
-      box-shadow: inset 0 0 5px #000;
+      background: linear-gradient(90deg, #ff0000, #00ff00, #0000ff);
+      border-radius: 3px; outline: none; margin: 10px 0;
+      opacity: 0.8;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none; width: 20px; height: 20px;
       border-radius: 50%; background: #fff; cursor: pointer;
-      box-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink);
+      box-shadow: 0 0 10px #fff;
       transition: transform 0.1s;
     }
-    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); box-shadow: 0 0 15px #fff; }
 
     .presets { display: flex; gap: 5px; justify-content: space-between; }
     .preset-btn {
       flex: 1; padding: 6px 0; font-size: 0.65rem;
-      background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
       border-radius: 4px; color: #aaa; cursor: pointer; transition: all 0.2s;
       white-space: nowrap;
     }
-    .preset-btn:hover { border-color: var(--neon-blue); color: #fff; box-shadow: 0 0 5px var(--neon-blue); }
+    .preset-btn:hover { background: rgba(255,255,255,0.2); color: #fff; border-color: #fff; }
 
-    /* 模式按鈕 */
+    /* 模式按鈕 (RGB Active Style) */
     .mode-container { display: flex; justify-content: center; gap: 15px; margin-top: 5px; }
     .mode-btn {
-      padding: 10px 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 30px;
-      cursor: pointer; background: rgba(0,0,0,0.3); color: #ccc; font-weight: bold; font-size: 0.8rem;
+      padding: 10px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 30px;
+      cursor: pointer; background: rgba(0,0,0,0.5); color: #ccc; font-weight: bold; font-size: 0.8rem;
       transition: all 0.3s; flex: 1; max-width: 150px;
       position: relative; overflow: hidden; text-align: center;
     }
     .mode-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
     .mode-btn.active {
-      border-color: var(--neon-pink);
       color: #fff;
-      background: rgba(255, 0, 255, 0.1);
-      box-shadow: 0 0 15px var(--neon-pink), inset 0 0 10px var(--neon-pink);
+      border-color: transparent;
+      background: linear-gradient(45deg, #ff00cc, #333399);
+      box-shadow: 0 0 15px #ff00cc;
+      animation: hueCycle 5s infinite linear;
     }
 
     /* --- 4. Pad 網格佈局 --- */
@@ -238,25 +265,23 @@
       transform-style: preserve-3d;
     }
 
-    /* --- 5. Pad 本體 (Cyberpunk Style) --- */
+    /* --- 5. Pad 本體 (RGB Style) --- */
     .pad {
-      background: rgba(30, 30, 40, 0.6);
+      background: rgba(30, 30, 40, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; position: relative; overflow: hidden;
       touch-action: none; -webkit-tap-highlight-color: transparent;
       box-shadow: 
-        0 4px 6px rgba(0,0,0,0.3), 
-        inset 0 1px 0 rgba(255,255,255,0.1),
-        inset 0 0 20px rgba(0,0,0,0.5);
-      transition: transform 0.1s, background 0.1s, border-color 0.1s;
+        0 4px 6px rgba(0,0,0,0.5), 
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: transform 0.1s;
     }
 
-    /* Pad 內部發光字體 */
     .pad strong {
       font-size: 2rem; pointer-events: none; z-index: 2;
-      color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.5);
       font-family: 'Courier New', monospace;
       transition: color 0.1s, text-shadow 0.1s;
     }
@@ -267,52 +292,57 @@
       text-transform: uppercase; letter-spacing: 1px;
     }
 
-    /* Pad 觸發狀態 */
     .pad:active { transform: scale(0.95); }
     
+    /* Pad 被觸發時的 RGB 瘋狂變色效果 */
     .pad.active {
       border-color: #fff;
-      background: rgba(255, 255, 255, 0.15);
-      box-shadow: 
-        0 0 10px var(--neon-blue),
-        0 0 20px var(--neon-blue),
-        0 0 40px var(--neon-blue),
-        inset 0 0 20px rgba(0, 243, 255, 0.3);
+      animation: rgbBgCycle 2s linear infinite, padPulse 0.1s ease-out;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
       z-index: 10;
-      animation: padPulse 0.1s ease-out;
     }
 
-    /* 隨機 Spotlight 效果 (不干擾 Active 狀態) */
+    @keyframes rgbBgCycle {
+      0% { background-color: rgba(255, 0, 0, 0.4); box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); }
+      15% { background-color: rgba(255, 127, 0, 0.4); box-shadow: 0 0 30px rgba(255, 127, 0, 0.6); }
+      30% { background-color: rgba(255, 255, 0, 0.4); box-shadow: 0 0 30px rgba(255, 255, 0, 0.6); }
+      45% { background-color: rgba(0, 255, 0, 0.4); box-shadow: 0 0 30px rgba(0, 255, 0, 0.6); }
+      60% { background-color: rgba(0, 0, 255, 0.4); box-shadow: 0 0 30px rgba(0, 0, 255, 0.6); }
+      75% { background-color: rgba(75, 0, 130, 0.4); box-shadow: 0 0 30px rgba(75, 0, 130, 0.6); }
+      100% { background-color: rgba(148, 0, 211, 0.4); box-shadow: 0 0 30px rgba(148, 0, 211, 0.6); }
+    }
+
+    /* 隨機 Spotlight 效果 */
     .pad.spotlight {
       animation: spotlightFlash 0.6s ease-out;
-      border-color: rgba(255, 255, 255, 0.6);
+      border-color: rgba(255, 255, 255, 0.8);
     }
     .pad.spotlight strong {
-      color: rgba(255, 255, 255, 0.9);
-      text-shadow: 0 0 8px #fff;
+      color: #fff; text-shadow: 0 0 10px #fff;
     }
 
     @keyframes spotlightFlash {
-      0% { background: rgba(255, 255, 255, 0.2); box-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.02); }
-      100% { background: rgba(30, 30, 40, 0.6); box-shadow: 0 4px 6px rgba(0,0,0,0.3); transform: scale(1); }
+      0% { background: rgba(255, 255, 255, 0.3); box-shadow: 0 0 20px #fff; transform: scale(1.02); }
+      100% { background: rgba(30, 30, 40, 0.8); box-shadow: 0 4px 6px rgba(0,0,0,0.5); transform: scale(1); }
     }
     
     @keyframes padPulse {
       0% { transform: scale(1); } 50% { transform: scale(0.98); } 100% { transform: scale(1); }
     }
 
-    .pad.active strong { color: #fff; text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue); }
-    .pad.active .pad-label { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
-    .pad.drag-over { border-color: var(--neon-pink); background: rgba(255, 0, 255, 0.1); }
+    .pad.active strong { color: #fff; text-shadow: 0 0 10px #fff; }
+    .pad.active .pad-label { color: #fff; text-shadow: 0 0 5px #fff; }
+    .pad.drag-over { border-color: #00ff00; background: rgba(0, 255, 0, 0.2); box-shadow: 0 0 20px #00ff00; }
     .pad.error { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; animation: shake 0.3s ease-in-out; }
 
-    /* 鐳射進度條 */
+    /* 鐳射進度條 (RGB 變色) */
     .progress-bar {
-      position: absolute; bottom: 0; left: 0; height: 4px;
+      position: absolute; bottom: 0; left: 0; height: 5px;
       background: #fff; width: 0%; opacity: 0;
       transition: opacity 0.1s; pointer-events: none;
-      box-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink);
+      box-shadow: 0 0 10px #fff;
       z-index: 5;
+      animation: hueCycle 2s linear infinite;
     }
     .pad.active .progress-bar { opacity: 1; }
 
@@ -321,16 +351,17 @@
       position: absolute; border-radius: 50%;
       transform: scale(0);
       animation: ripple 0.6s linear;
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.5);
       pointer-events: none;
     }
     @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
     /* --- 其他 --- */
     .loading { 
-      text-align: center; margin: 10px; color: var(--neon-blue); 
+      text-align: center; margin: 10px; color: #fff; 
       font-weight: bold; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;
       animation: blink 1s infinite;
+      text-shadow: 0 0 10px #00f3ff;
     }
     @keyframes blink { 50% { opacity: 0.5; } }
     
@@ -359,10 +390,10 @@
 
   <div id="startOverlay">
     <h2>🎵 Web DJ Pad 🎵</h2>
-    <button class="start-btn">INITIALIZE SYSTEM <br> 啟動系統</button>
-    <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:var(--neon-blue); font-family:monospace; text-align:center; line-height: 1.6;">
-      > POLYPHONY MODE: ACTIVE / 支援多重音效 < <br>
-      > NEON ENGINE: ONLINE / 霓虹引擎上線 <
+    <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
+    <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:#fff; font-family:monospace; text-align:center; line-height: 1.6; text-shadow: 0 0 5px #00f3ff;">
+      > POLYPHONY MODE: ACTIVE / 支援多重音效 <br>
+      > RGB ENGINE: MAXIMUM POWER
     </p>
   </div>
 
@@ -394,7 +425,7 @@
           <span>🚀 PITCH CONTROL / 速度控制</span>
           <div class="value-adjuster">
             <button class="adj-btn" onclick="adjustPitch(-0.1)">-</button>
-            <span id="pitch-val" style="min-width: 40px; text-align: center; color:#fff; font-weight:bold; text-shadow:0 0 5px var(--neon-blue);">1.0x</span>
+            <span id="pitch-val" style="min-width: 40px; text-align: center; color:#fff; font-weight:bold; text-shadow:0 0 5px #00f3ff;">1.0x</span>
             <button class="adj-btn" onclick="adjustPitch(0.1)">+</button>
           </div>
         </div>
@@ -424,10 +455,9 @@
     <div class="grid" id="padGrid"></div>
   </div>
   
-  <div class="hint">💡 TIP: MULTI-TOUCH / 提示：支援多重音效</div>
+  <div class="hint">💡 TIP: MULTI-TOUCH & DRAG DROP / 提示：支援多重音效與拖曳更換</div>
 
   <script>
-    // --- 配置常數 ---
     const PAD_KEYS = ["1","2","3","4","A","C","D","E","F","Q","R","S","V","W","X","Z"];
     const DEFAULT_FILES = [
       "1_親愛的.mp3", "2_示意停車.mp3", "3_去洪幹幹欸.mp3", "4_DAMN.mp3",
@@ -436,8 +466,8 @@
       "V_前方車輛請向右避讓.mp3", "W_王老先生有塊地.mp3", "X_Airhorn.mp3", "Z_新幹線エアホーン.mp3"
     ];
     const AUDIO_PATH = "audio/";
+    const LOAD_TIMEOUT = 8000;
 
-    // --- 全域狀態 ---
     let appState = {
       mode: "normal",
       volume: 0.8,
@@ -455,7 +485,6 @@
     const progressAnimationIds = {};
     const blobUrls = {};
 
-    // --- 工具函數 ---
     function getPadLabel(fname) {
       if (!fname) return "EMPTY";
       try { fname = decodeURIComponent(fname); } catch(e){}
@@ -464,19 +493,24 @@
     }
 
     function safeSetPointerCapture(el, id) {
-      try { if(el.hasPointerCapture?.(id)) return; el.setPointerCapture?.(id); } catch(e){}
+      try { 
+        if (el.hasPointerCapture && el.hasPointerCapture(id)) return; 
+        if (el.setPointerCapture) el.setPointerCapture(id); 
+      } catch(e){}
     }
+    
     function safeReleasePointerCapture(el, id) {
-      try { if(!el.hasPointerCapture?.(id)) return; el.releasePointerCapture?.(id); } catch(e){}
+      try { 
+        if (el.hasPointerCapture && !el.hasPointerCapture(id)) return; 
+        if (el.releasePointerCapture) el.releasePointerCapture(id); 
+      } catch(e){}
     }
 
-    // 【完美修正】創建漣漪特效 - 包含清理舊元素與自動銷毀
     function createRipple(event, element) {
       const circle = document.createElement("span");
       const diameter = Math.max(element.clientWidth, element.clientHeight);
       const radius = diameter / 2;
 
-      // 如果是鍵盤觸發，event 為 null，位置設在中心
       let x, y;
       if (event && event.clientX) {
         const rect = element.getBoundingClientRect();
@@ -492,10 +526,8 @@
       circle.style.top = `${y}px`;
       circle.classList.add("ripple");
 
-      // 1. 移除該元素內的所有舊漣漪 (解決快速連擊堆積)
       Array.from(element.getElementsByClassName("ripple")).forEach(r => r.remove());
 
-      // 2. 加入自動銷毀 (解決單次點擊殘留)
       circle.addEventListener('animationend', () => {
         circle.remove();
       });
@@ -503,28 +535,29 @@
       element.appendChild(circle);
     }
 
-    // --- 背景粒子生成 ---
     function initParticles() {
       const container = document.getElementById('particles-container');
-      const particleCount = 60; // 粒子數量
+      const particleCount = 60;
 
       for (let i = 0; i < particleCount; i++) {
         const star = document.createElement('div');
         star.className = 'star';
         
-        // 隨機位置
         const x = Math.random() * 100;
         const y = Math.random() * 100;
-        // 隨機大小
         const size = Math.random() * 3 + 1;
-        // 隨機動畫延遲與時長
         const delay = Math.random() * 5;
         const duration = Math.random() * 3 + 2;
+        
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff', '#ffffff'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
         star.style.left = `${x}%`;
         star.style.top = `${y}%`;
         star.style.width = `${size}px`;
         star.style.height = `${size}px`;
+        star.style.backgroundColor = randomColor;
+        star.style.boxShadow = `0 0 5px ${randomColor}`;
         star.style.animationDelay = `${delay}s`;
         star.style.animationDuration = `${duration}s`;
 
@@ -532,14 +565,11 @@
       }
     }
 
-    // --- 隨機 Spotlight 循環 ---
     function autoSpotlightLoop() {
       if (!isInitialized) return;
 
-      // 隨機決定要閃幾個 (2 到 5 個)
       const count = Math.floor(Math.random() * 4) + 2; 
       
-      // 洗牌算法取得隨機鍵值
       const keys = [...PAD_KEYS];
       for (let i = keys.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -549,20 +579,16 @@
 
       selectedKeys.forEach(key => {
         const pad = padElements[key];
-        // 如果目前不是 active (避免干擾正在操作的按鍵)，就加上 spotlight 樣式
         if (pad && !pad.classList.contains('active')) {
           pad.classList.add('spotlight');
-          // 動畫時間結束後移除
           setTimeout(() => pad.classList.remove('spotlight'), 600);
         }
       });
 
-      // 設定下一次觸發的時間 (隨機 0.5s ~ 2.0s)
       const nextTime = Math.random() * 1500 + 500;
       setTimeout(autoSpotlightLoop, nextTime);
     }
 
-    // --- 1. 設定管理 (LocalStorage) ---
     function loadSettings() {
       const saved = localStorage.getItem('djPadSettingsPro');
       if (saved) {
@@ -586,7 +612,6 @@
       }, 300);
     }
 
-    // --- 2. 核心：預載入音頻 ---
     async function preloadAudios() {
       const loadingEl = document.getElementById('loading');
       let loadedCount = 0;
@@ -596,19 +621,43 @@
         return new Promise((resolve) => {
           const key = PAD_KEYS[idx];
           const audio = new Audio();
+          let completed = false;
+          let timeoutId;
+
+          const done = (success = true) => {
+            if (completed) return;
+            completed = true;
             
-          const done = () => {
+            clearTimeout(timeoutId);
+            audio.oncanplaythrough = null;
+            audio.onloadeddata = null;
+            audio.onerror = null;
+
+            if (success) {
+              preloadedAudios[key] = audio;
+            } else {
+              preloadedAudios[key] = null;
+            }
+
             loadedCount++;
             loadingEl.textContent = `SYSTEM LOADING... ${Math.floor((loadedCount / total) * 100)}%`;
             resolve();
           };
 
-          audio.oncanplaythrough = () => { preloadedAudios[key] = audio; done(); };
+          audio.oncanplaythrough = () => done(true);
+          audio.onloadeddata = () => {
+            if (audio.readyState >= 2) done(true);
+          };
+          
           audio.onerror = () => { 
             console.warn(`⚠️ 缺檔: ${file}`);
-            preloadedAudios[key] = null;
-            done(); 
+            done(false);
           };
+
+          timeoutId = setTimeout(() => {
+            console.warn(`⚠️ 載入超時: ${file}`);
+            done(false);
+          }, LOAD_TIMEOUT);
 
           audio.src = AUDIO_PATH + file;
           audio.preload = 'auto';
@@ -620,7 +669,6 @@
       loadingEl.style.display = 'none';
     }
 
-    // --- 3. 獨立動畫控制 ---
     function startProgressAnimation(key, audioInstance) {
       if (progressAnimationIds[key]) {
         cancelAnimationFrame(progressAnimationIds[key]);
@@ -645,17 +693,14 @@
       progressAnimationIds[key] = requestAnimationFrame(update);
     }
 
-    // --- 4. 播放邏輯 ---
     function playPad(key, event = null) {
       if (!isInitialized) return;
 
       const pad = padElements[key];
       if (!pad) return;
 
-      // 觸發視覺特效
       createRipple(event, pad);
       
-      // 【關鍵修正】移除 spotlight 類別，避免視覺衝突
       pad.classList.remove('spotlight');
 
       if (!preloadedAudios[key]) {
@@ -663,7 +708,6 @@
         return;
       }
 
-      // 模式邏輯 (單次與循環需處理)
       if (appState.mode === "oneshot") {
         stopAllPads(); 
       } else if (appState.mode === "loop") {
@@ -775,7 +819,6 @@
       setTimeout(() => pad.classList.remove('error'), 300);
     }
 
-    // --- 5. Drag & Drop ---
     function setupDragAndDrop(pad, key) {
       pad.ondragover = (e) => { e.preventDefault(); pad.classList.add('drag-over'); };
       pad.ondragleave = (e) => { e.preventDefault(); pad.classList.remove('drag-over'); };
@@ -811,7 +854,6 @@
       };
     }
 
-    // --- 6. DOM 初始化 ---
     const padGrid = document.getElementById('padGrid');
     
     PAD_KEYS.forEach((key, idx) => {
@@ -843,8 +885,6 @@
       padElements[key] = pad;
     });
 
-    // --- 7. UI 控制與事件監聽 ---
-    
     function updateVolume(val) {
       let v = parseInt(val);
       if (isNaN(v)) v = 80;
@@ -895,12 +935,10 @@
     
     document.getElementById('pitch').oninput = (e) => updatePitch(e.target.value);
 
-    // 【模式切換邏輯 - 修正】
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.onclick = () => {
         const newMode = btn.dataset.mode;
         
-        // 只有當模式真正改變時，才停止播放 (體驗優化)
         if (appState.mode !== newMode) {
            stopAllPads();
            appState.mode = newMode;
@@ -913,7 +951,6 @@
       };
     });
 
-    // 鍵盤控制
     document.addEventListener('keydown', (e) => {
       if (!isInitialized) return;
       if (e.isComposing || e.keyCode === 229) return;
@@ -939,7 +976,6 @@
       Object.values(blobUrls).forEach(url => URL.revokeObjectURL(url));
     });
 
-    // --- 8. 啟動程序 ---
     const overlay = document.getElementById('startOverlay');
     const startBtn = document.querySelector('.start-btn');
     
@@ -948,10 +984,10 @@
       overlay.style.opacity = '0';
       setTimeout(() => overlay.style.display = 'none', 500);
       
-      // 啟動特效
       initParticles();
       autoSpotlightLoop();
 
+      // [修正] 補上 data: 前綴，確保 iOS 可解鎖音頻
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
       silentAudio.play().then(() => {
         console.log("✅ AUDIO SYSTEM ONLINE");
