@@ -9,7 +9,7 @@
     h1 {text-align: center; color: #00d4ff; margin-top: 32px;}
     .panel {display: flex; justify-content: center; gap: 36px; margin: 24px 0;}
     .panel label {display:inline-flex;align-items:center;gap:8px;}
-    .grid {display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; max-width: 500px; margin: 0 auto;}
+    .grid {display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; max-width: 600px; margin: 0 auto;}
     .pad {background:linear-gradient(145deg,#2a2a3a,#1a1a2a); border-radius:18px; min-height:90px; display:flex;flex-direction:column;align-items:center; justify-content:center; cursor:pointer; font-size:1.4rem; user-select:none; box-shadow:0 8px 25px rgba(0,0,0,0.3); transition:.2s;}
     .pad:active {background:linear-gradient(145deg,#00d4ff,#ff4081);}
     .pad-label {font-size:1rem; margin-top:4px;}
@@ -30,22 +30,32 @@
   </div>
   <div class="grid" id="padGrid"></div>
   <script>
-    // PAD key 設定與檔案路徑
-    const padKeys = ["1","2","3","4","Q","W","E","R","A","S","D","F","Z","X","C","V"];
-    const padLabels = padKeys.map((k,i) => `Pad ${i+1} (${k})`);
-    // 音效路徑範例：audio/1.mp3, audio/Q.mp3 ...
-    const padSounds = padKeys.map(k => `audio/${k}.mp3`);
-
-    // 播放參數
-    let playMode = "normal"; // normal, loop, oneshot
-    let volume = 0.8;
-    let activeAudios = {};
-
-    // 主音量控制
-    const volumeSlider = document.getElementById('volume');
-    volumeSlider.oninput = e => volume = e.target.value / 100;
-
-    // 模式切換
+    // Pad 鍵順 & 檔名順序必須對齊
+    const padKeys = ["1","2","3","4","A","C","D","E","F","Q","R","S","V","W","X","Z"];
+    const soundFiles = [
+      "1_親愛的.mp3",
+      "2_示意停車.mp3",
+      "3_去洪幹幹欸.mp3",
+      "4_DAMN.mp3",
+      "A_For Elise(Oiiai).mp3",
+      "C_Dj Airhorn.mp3",
+      "D_星期五晚上.mp3",
+      "E_黑黑黑黑.mp3",
+      "F_請支援收銀.mp3",
+      "Q_John Cena.mp3",
+      "R_阿珍愛上了阿強.mp3",
+      "S_Young Black&Rich.mp3",
+      "V_前方車輛請向右避讓.mp3",
+      "W_王老先生有塊地.mp3",
+      "X_Airhorn.mp3",
+      "Z_新幹線エアホーン.mp3"
+    ];
+    function getPadLabel(fname) {
+      let m = fname.match(/_(.+)\.\w+$/);
+      return m ? m[1] : fname.replace(/\.\w+$/, '');
+    }
+    let playMode = "normal", volume = 0.8, activeAudios = {};
+    document.getElementById('volume').oninput = e => volume = e.target.value / 100;
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -53,41 +63,31 @@
         playMode = btn.dataset.mode;
       }
     });
-
-    // 組件生成
     const padGrid = document.getElementById('padGrid');
     padKeys.forEach((key, idx) => {
+      const fname = soundFiles[idx];
       const pad = document.createElement('div');
       pad.className = "pad";
       pad.tabIndex = 0;
-      pad.innerHTML = `<strong>${key}</strong><div class="pad-label">${padLabels[idx]}</div>`;
-      pad.onclick = () => playPad(key, idx);
+      pad.innerHTML = `<strong>${key}</strong><div class="pad-label">${getPadLabel(fname)}</div>`;
+      pad.onclick = () => playPad(key, 'audio/' + fname, idx);
       padGrid.appendChild(pad);
     });
-
-    // 播放主函式
-    function playPad(key, idx){
-      // 單次模式，全部停止
+    function playPad(key, file, idx){
       if(playMode==="oneshot") stopAllPads();
-
-      // 迴圈模式: 若有在播則停掉
       if(playMode==="loop" && activeAudios[key]){
-        stopPad(key);
-        return;
+        stopPad(key); return;
       }
-
       stopPad(key);
       const pad = padGrid.children[idx];
       pad.classList.add('active');
-      const audio = new Audio(padSounds[idx]);
+      const audio = new Audio(file);
       audio.volume = volume;
       audio.onended = () => { pad.classList.remove('active'); delete activeAudios[key];};
       if(playMode==="loop") audio.loop = true;
       activeAudios[key]=audio;
       audio.play();
     }
-
-    // 停止某 pad
     function stopPad(key){
       if(activeAudios[key]){
         activeAudios[key].pause();
@@ -98,19 +98,12 @@
         if(pad.querySelector("strong").textContent===key) pad.classList.remove('active');
       });
     }
-
-    function stopAllPads(){
-      Object.keys(activeAudios).forEach(stopPad);
-    }
-
-    // 鍵盤快捷鍵支援
+    function stopAllPads(){ Object.keys(activeAudios).forEach(stopPad);}
     document.addEventListener('keydown', e=>{
       const key = e.key.toUpperCase();
       const idx = padKeys.indexOf(key);
-      if(idx>=0) playPad(key, idx);
-      // Space 停止全部
+      if(idx>=0) playPad(key, 'audio/' + soundFiles[idx], idx);
       if(e.code==="Space") stopAllPads();
-      // Ctrl+按 pad 停止此 pad
       if(idx>=0 && (e.ctrlKey||e.metaKey)) stopPad(key);
     });
   </script>
