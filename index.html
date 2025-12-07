@@ -22,14 +22,14 @@
     h1 {
       text-align: center; 
       color: #00d4ff; 
-      margin: 15px 0; 
+      margin: 15px 0 10px 0; 
       font-weight: 800;
       font-size: 1.8rem;
       text-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
       z-index: 10;
     }
 
-    /* --- 2. 啟動遮罩 (解決 iOS Autoplay) --- */
+    /* --- 2. 啟動遮罩 --- */
     #startOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(18, 18, 32, 0.98);
@@ -49,41 +49,123 @@
     }
     .start-btn:active { transform: scale(0.95); }
 
-    /* --- 3. 控制面板 (Glassmorphism) --- */
+    /* --- 3. 控制面板 (重構版) --- */
     .panel {
       background: rgba(255, 255, 255, 0.05);
-      padding: 12px 20px;
-      margin: 0 15px 15px 15px;
+      padding: 15px;
+      margin: 0 10px 10px 10px;
       border-radius: 16px;
       display: flex; 
-      justify-content: center; 
-      flex-wrap: wrap; 
-      gap: 20px; 
+      flex-direction: column;
+      gap: 15px; 
       backdrop-filter: blur(10px);
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
       border: 1px solid rgba(255,255,255,0.05);
       z-index: 10;
     }
-    .control-group { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #ccc; }
-    .control-group label { font-weight: 600; min-width: 80px; }
+
+    /* 控制區塊容器 */
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .control-block {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px 15px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #ccc;
+      font-weight: 600;
+    }
+
+    /* 數值顯示與微調區 */
+    .value-adjuster {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 輸入框樣式 */
+    .val-input {
+      background: #222;
+      border: 1px solid #444;
+      color: #00d4ff;
+      width: 50px;
+      text-align: center;
+      border-radius: 4px;
+      padding: 2px 4px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .val-input:focus { outline: none; border-color: #00d4ff; }
+
+    /* 微調按鈕 (+/-) */
+    .adj-btn {
+      width: 24px; height: 24px;
+      border-radius: 4px; border: 1px solid #444;
+      background: #333; color: #fff;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; line-height: 1;
+      transition: background 0.1s;
+    }
+    .adj-btn:hover { background: #444; border-color: #00d4ff; }
+    .adj-btn:active { transform: scale(0.95); }
 
     /* 滑桿樣式 */
     input[type=range] {
-      -webkit-appearance: none; width: 100px; height: 5px;
+      -webkit-appearance: none; width: 100%; height: 6px;
       background: #444; border-radius: 3px; outline: none;
+      margin: 5px 0;
     }
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 16px; height: 16px;
+      -webkit-appearance: none; width: 18px; height: 18px;
       border-radius: 50%; background: #00d4ff; cursor: pointer;
       transition: transform 0.1s; box-shadow: 0 0 10px rgba(0,212,255,0.5);
     }
-    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
 
-    /* 模式按鈕 */
-    .mode-btn {
-      padding: 6px 14px; border: 1px solid #444; border-radius: 20px;
-      cursor: pointer; background: #222; color: #aaa; font-size: 0.85rem;
+    /* 快捷按鈕區 */
+    .presets {
+      display: flex;
+      gap: 6px;
+      justify-content: space-between;
+    }
+    .preset-btn {
+      flex: 1;
+      padding: 4px 0;
+      font-size: 0.75rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: #aaa;
+      cursor: pointer;
       transition: all 0.2s;
+    }
+    .preset-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .preset-btn:active { background: #00d4ff; color: #000; }
+    
+    /* 模式按鈕 */
+    .mode-container {
+      display: flex; justify-content: center; gap: 10px; margin-top: 5px;
+    }
+    .mode-btn {
+      padding: 8px 20px; border: 1px solid #444; border-radius: 20px;
+      cursor: pointer; background: #222; color: #aaa; font-size: 0.9rem;
+      transition: all 0.2s; flex: 1; max-width: 100px; text-align: center;
     }
     .mode-btn:hover { background: #333; color: #fff; }
     .mode-btn.active {
@@ -149,7 +231,7 @@
     }
     .pad.active strong, .pad.active .pad-label { color: #fff; }
 
-    /* 進度條 (Bottom Bar Style) */
+    /* 進度條 */
     .progress-bar {
       position: absolute; bottom: 0; left: 0; height: 5px;
       background: #fff; width: 0%; opacity: 0;
@@ -177,12 +259,11 @@
       100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
     }
 
-    @media (max-width: 500px) {
+    @media (max-width: 600px) {
       .grid { gap: 8px; }
       .pad strong { font-size: 1.4rem; }
       .pad-label { font-size: 0.7rem; }
-      .control-group { flex-direction: column; align-items: flex-start; gap: 5px; }
-      .panel { justify-content: space-around; }
+      .control-block { min-width: 100%; }
     }
   </style>
 </head>
@@ -197,22 +278,53 @@
   <h1>🎵 Web DJ Pad 🎵</h1>
   
   <div class="panel">
-    <div class="control-group">
-      <label for="volume">🔊 音量 <span id="vol-val">80%</span></label>
-      <input type="range" id="volume" min="0" max="100" value="80">
-    </div>
     
-    <div class="control-group">
-      <label for="pitch">🚀 速度 <span id="pitch-val">1.0x</span></label>
-      <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" value="1.0">
+    <div class="controls-row">
+      <div class="control-block">
+        <div class="block-header">
+          <span>🔊 音量 (Volume)</span>
+          <div class="value-adjuster">
+            <input type="number" id="vol-input" class="val-input" min="0" max="100" value="80">
+            <span>%</span>
+          </div>
+        </div>
+        <input type="range" id="volume" min="0" max="100" value="80">
+        <div class="presets">
+          <button class="preset-btn" onclick="updateVolume(0)">Mute</button>
+          <button class="preset-btn" onclick="updateVolume(30)">30%</button>
+          <button class="preset-btn" onclick="updateVolume(50)">50%</button>
+          <button class="preset-btn" onclick="updateVolume(80)">80%</button>
+          <button class="preset-btn" onclick="updateVolume(100)">100%</button>
+        </div>
+      </div>
+
+      <div class="control-block">
+        <div class="block-header">
+          <span>🚀 速度 (Speed)</span>
+          <div class="value-adjuster">
+            <button class="adj-btn" onclick="adjustPitch(-0.1)">-</button>
+            <span id="pitch-val" style="min-width: 40px; text-align: center; color:#00d4ff; font-weight:bold;">1.0x</span>
+            <button class="adj-btn" onclick="adjustPitch(0.1)">+</button>
+          </div>
+        </div>
+        <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" value="1.0">
+        <div class="presets">
+          <button class="preset-btn" onclick="updatePitch(0.5)">0.5x</button>
+          <button class="preset-btn" onclick="updatePitch(0.8)">0.8x</button>
+          <button class="preset-btn" onclick="updatePitch(1.0)">1.0x</button>
+          <button class="preset-btn" onclick="updatePitch(1.2)">1.2x</button>
+          <button class="preset-btn" onclick="updatePitch(1.5)">1.5x</button>
+          <button class="preset-btn" onclick="updatePitch(2.0)">2.0x</button>
+        </div>
+      </div>
     </div>
 
-    <div class="control-group">
-      <label>模式</label>
+    <div class="mode-container">
       <button class="mode-btn active" data-mode="normal">標準</button>
       <button class="mode-btn" data-mode="loop">循環</button>
       <button class="mode-btn" data-mode="oneshot">單次</button>
     </div>
+
   </div>
 
   <div id="loading" class="loading">正在預載入音效...</div>
@@ -243,9 +355,7 @@
     let isInitialized = false;
     let saveSettingsTimer = null;
 
-    // activeAudios 僅追蹤該按鍵"最新/活躍"的一個實例 (用於 UI 綁定)
     const activeAudios = {}; 
-    // runningSounds 追蹤"所有"正在發聲的實例
     const runningSounds = new Set();
     
     const preloadedAudios = {};
@@ -277,10 +387,8 @@
           const parsed = JSON.parse(saved);
           appState = { ...appState, ...parsed }; 
           
-          document.getElementById('volume').value = appState.volume * 100;
-          document.getElementById('vol-val').textContent = Math.round(appState.volume * 100) + "%";
-          document.getElementById('pitch').value = appState.playbackRate;
-          document.getElementById('pitch-val').textContent = appState.playbackRate + "x";
+          updateUIControls(); // 統一更新 UI
+          
           document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === appState.mode);
           });
@@ -329,9 +437,8 @@
       loadingEl.style.display = 'none';
     }
 
-    // --- 3. 獨立動畫控制 (關鍵優化) ---
+    // --- 3. 獨立動畫控制 ---
     function startProgressAnimation(key, audioInstance) {
-      // 如果有舊的動畫在跑，先取消，避免多重更新
       if (progressAnimationIds[key]) {
         cancelAnimationFrame(progressAnimationIds[key]);
       }
@@ -340,10 +447,8 @@
       const progressBar = pad.querySelector('.progress-bar');
 
       const update = () => {
-        // 安全檢查：如果這個 audio 已經不是 UI 綁定的對象，就停止更新
         if (activeAudios[key] !== audioInstance) return;
 
-        // 嚴謹的 Duration 檢查
         if (audioInstance.duration && Number.isFinite(audioInstance.duration)) {
           const pct = (audioInstance.currentTime / audioInstance.duration) * 100;
           progressBar.style.width = `${pct}%`;
@@ -369,21 +474,18 @@
         return;
       }
 
-      // 模式邏輯
       if (appState.mode === "oneshot") {
         stopAllPads(); 
       } else if (appState.mode === "loop") {
         if (activeAudios[key]) {
-          stopPad(key); // Toggle 停止
+          stopPad(key); 
           return;
         }
       } 
-      // 標準模式：直接通過，不呼叫 stopPad
 
       const sourceAudio = preloadedAudios[key];
       if (!sourceAudio || !sourceAudio.src) { triggerVisualError(pad); return; }
 
-      // 建立實例
       const audio = sourceAudio.cloneNode();
       audio.volume = appState.volume;
       audio.playbackRate = appState.playbackRate;
@@ -394,35 +496,26 @@
 
       audio.onended = () => {
         runningSounds.delete(audio);
-        
-        // 檢查該按鍵是否還有其他殘存聲音
-        // Set 是按照插入順序排列的，轉換成 Array 後取最後一個通常是「最新」的
         const remainingSounds = [...runningSounds].filter(a => a._padKey === key);
 
         if (activeAudios[key] === audio) {
-          // 如果剛結束的這個是 UI 正在綁定的主控音頻
           if (remainingSounds.length > 0) {
-            // 交棒給最後一個還在響的聲音
             const nextAudio = remainingSounds[remainingSounds.length - 1];
             activeAudios[key] = nextAudio;
             startProgressAnimation(key, nextAudio);
           } else {
-            // 真的沒聲音了，關閉 UI
             delete activeAudios[key];
             pad.classList.remove('active');
             pad.querySelector('.progress-bar').style.width = '0%';
             if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
           }
-        } 
-        // 如果結束的不是主控音頻，且也沒有其他聲音了 (防呆)
-        else if (remainingSounds.length === 0) {
+        } else if (remainingSounds.length === 0) {
            pad.classList.remove('active');
            pad.querySelector('.progress-bar').style.width = '0%';
            delete activeAudios[key];
         }
       };
 
-      // 設置 UI 綁定
       activeAudios[key] = audio;
       pad.classList.add('active');
 
@@ -430,7 +523,6 @@
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            // 【關鍵修正】確保在 promise resolve 時，這個 audio 還是 active 的
             if (activeAudios[key] === audio) {
               startProgressAnimation(key, audio);
             }
@@ -438,15 +530,16 @@
           .catch(err => {
             console.error(`播放失敗: ${key}`, err);
             runningSounds.delete(audio);
-            pad.classList.remove('active');
-            delete activeAudios[key];
-            triggerVisualError(pad);
+            if (activeAudios[key] === audio) {
+              pad.classList.remove('active');
+              delete activeAudios[key];
+              triggerVisualError(pad);
+            }
           });
       }
     }
 
     function stopPad(key) {
-      // 停止該 Key 的"所有"聲音實例
       runningSounds.forEach(audio => {
         if (audio._padKey === key) {
           audio.pause();
@@ -470,16 +563,16 @@
 
     function stopAllPads() {
       runningSounds.forEach(audio => {
-          audio.pause();
-          audio.currentTime = 0;
+        audio.pause();
+        audio.currentTime = 0;
       });
       runningSounds.clear();
       
       Object.keys(padElements).forEach(key => {
         const pad = padElements[key];
         if (pad) {
-            pad.classList.remove('active');
-            pad.querySelector('.progress-bar').style.width = '0%';
+          pad.classList.remove('active');
+          pad.querySelector('.progress-bar').style.width = '0%';
         }
         if (progressAnimationIds[key]) cancelAnimationFrame(progressAnimationIds[key]);
       });
@@ -560,27 +653,82 @@
       padElements[key] = pad;
     });
 
-    // --- 7. 事件監聽 ---
-    document.getElementById('volume').oninput = (e) => {
-      appState.volume = e.target.value / 100;
-      document.getElementById('vol-val').textContent = Math.round(appState.volume * 100) + "%";
+    // --- 7. UI 控制與事件監聽 ---
+    
+    // 更新音量 (整合 Slider, Input, Presets)
+    function updateVolume(val) {
+      let v = parseInt(val);
+      if (isNaN(v)) v = 80;
+      if (v < 0) v = 0;
+      if (v > 100) v = 100;
+      
+      appState.volume = v / 100;
+      
+      document.getElementById('volume').value = v;
+      document.getElementById('vol-input').value = v;
+      
       runningSounds.forEach(audio => audio.volume = appState.volume);
       saveSettings();
-    };
+    }
 
-    document.getElementById('pitch').oninput = (e) => {
-      appState.playbackRate = parseFloat(e.target.value);
-      document.getElementById('pitch-val').textContent = appState.playbackRate + "x";
+    // 更新速度 (整合 Slider, Presets)
+    function updatePitch(val) {
+      let p = parseFloat(val);
+      if (isNaN(p)) p = 1.0;
+      if (p < 0.5) p = 0.5;
+      if (p > 2.0) p = 2.0;
+      
+      p = parseFloat(p.toFixed(1));
+
+      appState.playbackRate = p;
+      
+      document.getElementById('pitch').value = p;
+      document.getElementById('pitch-val').textContent = p + "x";
+      
       runningSounds.forEach(audio => audio.playbackRate = appState.playbackRate);
       saveSettings();
-    };
+    }
 
+    // 微調速度 (+/- 按鈕)
+    function adjustPitch(delta) {
+      let newPitch = appState.playbackRate + delta;
+      updatePitch(newPitch);
+    }
+
+    // 更新 UI 顯示 (從 AppState 同步)
+    function updateUIControls() {
+      document.getElementById('volume').value = appState.volume * 100;
+      document.getElementById('vol-input').value = Math.round(appState.volume * 100);
+      
+      document.getElementById('pitch').value = appState.playbackRate;
+      document.getElementById('pitch-val').textContent = appState.playbackRate + "x";
+    }
+
+    // 綁定 Slider 事件
+    document.getElementById('volume').oninput = (e) => updateVolume(e.target.value);
+    document.getElementById('vol-input').onchange = (e) => updateVolume(e.target.value);
+    
+    document.getElementById('pitch').oninput = (e) => updatePitch(e.target.value);
+
+    // 【關鍵修正】模式切換 - 處理循環音頻
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.onclick = () => {
+        const oldMode = appState.mode;
+        
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         appState.mode = btn.dataset.mode;
-        if (appState.mode === 'oneshot') stopAllPads();
+        
+        // 如果從循環模式切換出去，停止所有正在循環的音頻
+        if (oldMode === 'loop' && appState.mode !== 'loop') {
+          stopAllPads();
+        }
+        
+        // 切換到單次模式也停止所有音頻
+        if (appState.mode === 'oneshot') {
+          stopAllPads();
+        }
+        
         saveSettings();
       };
     });
