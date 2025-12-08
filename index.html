@@ -61,6 +61,7 @@
       z-index: -1; pointer-events: none; overflow: hidden;
     }
     
+    /* 單個粒子樣式 */
     .star {
       position: absolute;
       background: #fff;
@@ -411,7 +412,7 @@
 
   <div id="startOverlay">
     <h2>🎵 Web DJ Pad 🎵</h2>
-    <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
+    <button class="start-btn">INITIALIZE SYSTEM <br> 啟動系統</button>
     <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:#fff; font-family:monospace; text-align:center; line-height: 1.6; text-shadow: 0 0 5px #00f3ff;">
       > POLYPHONY MODE: ACTIVE / 支援多重音效 < <br>
       > RGB ENGINE: MAXIMUM POWER <
@@ -433,12 +434,12 @@
         </div>
         <input type="range" id="volume" min="0" max="200" value="80">
         <div class="presets">
-          <button class="preset-btn" onclick="updateVolume(0)">MUTE (0)</button>
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE(0)</button>
           <button class="preset-btn" onclick="updateVolume(30)">30</button>
           <button class="preset-btn" onclick="updateVolume(50)">50</button>
           <button class="preset-btn" onclick="updateVolume(80)">80</button>
-          <button class="preset-btn" onclick="updateVolume(100)">MAX (100)</button>
-          <button class="preset-btn" onclick="updateVolume(200)">BST (200)</button>
+          <button class="preset-btn" onclick="updateVolume(100)">100</button>
+          <button class="preset-btn" onclick="updateVolume(200)">MAX(200)</button>
         </div>
       </div>
 
@@ -454,12 +455,12 @@
         <input type="range" id="pitch" min="0.1" max="2.0" step="0.1" value="1.0">
         <div class="presets">
           <button class="preset-btn" onclick="updatePitch(0.1)">0.1x</button>
-          <button class="preset-btn" onclick="updatePitch(0.5)">.5x</button>
-          <button class="preset-btn" onclick="updatePitch(0.8)">.8x</button>
-          <button class="preset-btn" onclick="updatePitch(1.0)">1x</button>
+          <button class="preset-btn" onclick="updatePitch(0.5)">0.5x</button>
+          <button class="preset-btn" onclick="updatePitch(0.8)">0.8x</button>
+          <button class="preset-btn" onclick="updatePitch(1.0)">1.0x</button>
           <button class="preset-btn" onclick="updatePitch(1.2)">1.2x</button>
           <button class="preset-btn" onclick="updatePitch(1.5)">1.5x</button>
-          <button class="preset-btn" onclick="updatePitch(2.0)">2x</button>
+          <button class="preset-btn" onclick="updatePitch(2.0)">2.0x</button>
         </div>
       </div>
     </div>
@@ -491,7 +492,6 @@
     ];
     
     // 【配置物件】{ file: "檔案名", name: "顯示名稱" }
-    // 檔名可以是任何名稱 (e.g. "1.mp3", "beat_01.wav")，無需包含中文
     const DEFAULT_CONFIG = [
       { file: "1.mp3", name: "親愛的" },
       { file: "2.mp3", name: "示意停車" },
@@ -543,7 +543,7 @@
     const progressAnimationIds = {};
     const blobUrls = {};
 
-    // [新增] AudioContext 變數
+    // [AudioContext 全域變數]
     let audioCtx = null;
 
     function getPadLabel(key, idx) {
@@ -748,28 +748,36 @@
       if (!sourceAudio || !sourceAudio.src) { triggerVisualError(pad); return; }
 
       const audio = sourceAudio.cloneNode();
+      audio.preservesPitch = false;
+      audio.mozPreservesPitch = false;
+      audio.webkitPreservesPitch = false;
+
       audio.volume = 1.0; 
       audio.playbackRate = appState.playbackRate;
       audio.loop = (appState.mode === "loop");
       audio._padKey = key;
       
       try {
-        if (audioCtx && audioCtx.state === 'running') {
+        if (audioCtx && audioCtx.state !== 'closed') {
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+
             const source = audioCtx.createMediaElementSource(audio);
             const gainNode = audioCtx.createGain();
             
             gainNode.gain.value = appState.volume;
             
-            // 【關鍵修正】保存 GainNode 引用，以便在播放途中調整音量
-            audio._gainNode = gainNode;
-
             source.connect(gainNode).connect(audioCtx.destination);
+            
+            audio._gainNode = gainNode;
+            audio._useWebAudio = true;
         } else {
              audio.volume = Math.min(appState.volume, 1.0);
+             audio._useWebAudio = false;
         }
       } catch (e) {
          console.warn("Web Audio API Error:", e);
          audio.volume = Math.min(appState.volume, 1.0);
+         audio._useWebAudio = false;
       }
 
       runningSounds.add(audio);
@@ -929,9 +937,8 @@
       document.getElementById('volume').value = v;
       document.getElementById('vol-input').value = v;
       
-      // 【修正】確保同時更新 Web Audio (GainNode) 和 Fallback 音量
       runningSounds.forEach(audio => {
-         if (audio._gainNode) {
+         if (audio._useWebAudio && audio._gainNode) {
             audio._gainNode.gain.value = appState.volume;
          } else {
             audio.volume = Math.min(appState.volume, 1.0);
@@ -953,7 +960,12 @@
       document.getElementById('pitch').value = p;
       document.getElementById('pitch-val').textContent = p + "x";
       
-      runningSounds.forEach(audio => audio.playbackRate = appState.playbackRate);
+      runningSounds.forEach(audio => {
+          audio.playbackRate = appState.playbackRate;
+          audio.preservesPitch = false;
+          audio.mozPreservesPitch = false;
+          audio.webkitPreservesPitch = false;
+      });
       saveSettings();
     }
 
@@ -1019,21 +1031,28 @@
     const startBtn = document.querySelector('.start-btn');
     
     startBtn.onclick = () => {
+      // 初始化 AudioContext
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      // 播放靜音解鎖
+      const buffer = audioCtx.createBuffer(1, 1, 22050);
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      source.start(0);
+
       isInitialized = true;
       overlay.style.opacity = '0';
       setTimeout(() => overlay.style.display = 'none', 500);
       
       initParticles();
       autoSpotlightLoop();
-
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContext();
-
-      const buffer = audioCtx.createBuffer(1, 1, 22050);
-      const source = audioCtx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioCtx.destination);
-      source.start(0);
 
       console.log("✅ AUDIO ENGINE INITIALIZED");
     };
