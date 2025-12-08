@@ -413,9 +413,8 @@
     <h2>🎵 Web DJ Pad 🎵</h2>
     <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
     <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:#fff; font-family:monospace; text-align:center; line-height: 1.6; text-shadow: 0 0 5px #00f3ff;">
-      > POLYPHONY MODE: ACTIVE / 支援多重音效 <br>
-      > RGB ENGINE: MAXIMUM POWER <br>
-      > GRID SIZE: 5x5 (25 PADS)
+      > POLYPHONY MODE: ACTIVE / 支援多重音效 < <br>
+      > RGB ENGINE: MAXIMUM POWER <
     </p>
   </div>
 
@@ -426,7 +425,7 @@
     <div class="controls-row">
       <div class="control-block">
         <div class="block-header">
-          <span>🔊 MASTER VOLUME / 主音量</span>
+          <span>🔊 MASTER VOLUME <br> 主音量</span>
           <div class="value-adjuster">
             <input type="number" id="vol-input" class="val-input" min="0" max="200" value="80">
             <span style="color:#aaa; font-size:0.8rem">%</span>
@@ -445,7 +444,7 @@
 
       <div class="control-block">
         <div class="block-header">
-          <span>🚀 PITCH CONTROL / 速度控制</span>
+          <span>🚀 PITCH CONTROL <br> 速度控制</span>
           <div class="value-adjuster">
             <button class="adj-btn" onclick="adjustPitch(-0.1)">-</button>
             <span id="pitch-val" style="min-width: 40px; text-align: center; color:#fff; font-weight:bold; text-shadow:0 0 5px #00f3ff;">1.0x</span>
@@ -479,7 +478,7 @@
     <div class="grid" id="padGrid"></div>
   </div>
   
-  <div class="hint">💡 TIP: MULTI-TOUCH & DRAG DROP / 提示：支援多重音效與拖曳更換</div>
+  <div class="hint">💡 TIP: MULTI-TOUCH / 提示：支援多重音效</div>
 
   <script>
     // --- 配置常數 ---
