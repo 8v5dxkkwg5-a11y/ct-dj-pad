@@ -322,7 +322,7 @@
       100% { background-color: rgba(148, 0, 211, 0.4); box-shadow: 0 0 30px rgba(148, 0, 211, 0.6); }
     }
 
-    /* 隨機 Spotlight 效果 */
+    /* 隨機 Spotlight 效果 (使用 CSS 變數) */
     .pad.spotlight {
       --spot-color: rgba(255, 255, 255, 0.8);
       animation: spotlightFlash 0.6s ease-out;
@@ -411,10 +411,11 @@
 
   <div id="startOverlay">
     <h2>🎵 Web DJ Pad 🎵</h2>
-    <button class="start-btn">INITIALIZE SYSTEM <br> 啟動系統</button>
+    <button class="start-btn">INITIALIZE SYSTEM / 啟動系統</button>
     <p style="margin-top:30px; opacity:0.7; font-size:0.8rem; color:#fff; font-family:monospace; text-align:center; line-height: 1.6; text-shadow: 0 0 5px #00f3ff;">
-      > POLYPHONY MODE: ACTIVE / 支援多重音效 < <br>
-      > RGB ENGINE: MAXIMUM POWER <
+      > POLYPHONY MODE: ACTIVE / 支援多重音效 <br>
+      > RGB ENGINE: MAXIMUM POWER <br>
+      > GRID SIZE: 5x5 (25 PADS)
     </p>
   </div>
 
@@ -425,7 +426,7 @@
     <div class="controls-row">
       <div class="control-block">
         <div class="block-header">
-          <span>🔊 MASTER VOLUME <br> 主音量</span>
+          <span>🔊 MASTER VOLUME / 主音量</span>
           <div class="value-adjuster">
             <input type="number" id="vol-input" class="val-input" min="0" max="200" value="80">
             <span style="color:#aaa; font-size:0.8rem">%</span>
@@ -433,17 +434,18 @@
         </div>
         <input type="range" id="volume" min="0" max="200" value="80">
         <div class="presets">
-          <button class="preset-btn" onclick="updateVolume(0)">MUTE(0)</button>
+          <button class="preset-btn" onclick="updateVolume(0)">MUTE (0)</button>
           <button class="preset-btn" onclick="updateVolume(30)">30</button>
           <button class="preset-btn" onclick="updateVolume(50)">50</button>
           <button class="preset-btn" onclick="updateVolume(80)">80</button>
-          <button class="preset-btn" onclick="updateVolume(100)">MAX(100)</button>
+          <button class="preset-btn" onclick="updateVolume(100)">MAX (100)</button>
+          <button class="preset-btn" onclick="updateVolume(200)">BST (200)</button>
         </div>
       </div>
 
       <div class="control-block">
         <div class="block-header">
-          <span>🚀 PITCH CONTROL <br> 速度控制</span>
+          <span>🚀 PITCH CONTROL / 速度控制</span>
           <div class="value-adjuster">
             <button class="adj-btn" onclick="adjustPitch(-0.1)">-</button>
             <span id="pitch-val" style="min-width: 40px; text-align: center; color:#fff; font-weight:bold; text-shadow:0 0 5px #00f3ff;">1.0x</span>
@@ -452,6 +454,7 @@
         </div>
         <input type="range" id="pitch" min="0.1" max="2.0" step="0.1" value="1.0">
         <div class="presets">
+          <button class="preset-btn" onclick="updatePitch(0.1)">0.1x</button>
           <button class="preset-btn" onclick="updatePitch(0.5)">.5x</button>
           <button class="preset-btn" onclick="updatePitch(0.8)">.8x</button>
           <button class="preset-btn" onclick="updatePitch(1.0)">1x</button>
@@ -476,7 +479,7 @@
     <div class="grid" id="padGrid"></div>
   </div>
   
-  <div class="hint">💡 TIP: MULTI-TOUCH / 提示：支援多重音效</div>
+  <div class="hint">💡 TIP: MULTI-TOUCH & DRAG DROP / 提示：支援多重音效與拖曳更換</div>
 
   <script>
     // --- 配置常數 ---
@@ -497,15 +500,15 @@
       { file: "4.mp3", name: "黑黑黑黑" },
       { file: "5.mp3", name: "阿珍愛上了阿強" },
       
-      { file: "Q.mp3", name: "給愛麗絲(51121)" },
-      { file: "W.mp3", name: "John Cena" },
-      { file: "E.mp3", name: "星期五晚上" },
-      { file: "R.mp3", name: "上車舞BGM" },
-      { file: "T.mp3", name: "修車找藍丁" },
-
-      { file: "A.mp3", name: "請支援收銀" },
-      { file: "S.mp3", name: "Dun Dun Duuuun" },
-      { file: "D.mp3", name: "DAMN" },
+      { file: "Q.mp3", name: "請支援收銀" },
+      { file: "W.mp3", name: "For Elise (Oiiai)" },
+      { file: "E.mp3", name: "John Cena" },
+      { file: "R.mp3", name: "星期五晚上" },
+      { file: "T.mp3", name: "上車舞BGM" },
+      
+      { file: "A.mp3", name: "Dun Dun Duuuun" },
+      { file: "S.mp3", name: "DAMN" },
+      { file: "D.mp3", name: "修車找藍丁" },
       { file: "", name: "EMPTY" }, 
       { file: "", name: "EMPTY" },
       
@@ -540,6 +543,9 @@
     const pressedKeys = new Set();
     const progressAnimationIds = {};
     const blobUrls = {};
+
+    // [新增] AudioContext 變數
+    let audioCtx = null;
 
     function getPadLabel(key, idx) {
       const config = DEFAULT_CONFIG[idx];
@@ -611,7 +617,6 @@
       const selectedKeys = keys.slice(0, count);
       selectedKeys.forEach(key => {
         const pad = padElements[key];
-        // 【修正】只對非 active 且非 empty 的按鍵進行隨機閃爍
         if (pad && !pad.classList.contains('active') && !pad.classList.contains('empty')) {
           const hue = Math.floor(Math.random() * 360);
           pad.style.setProperty('--spot-color', `hsla(${hue}, 100%, 50%, 0.6)`);
@@ -654,7 +659,6 @@
           const config = DEFAULT_CONFIG[idx];
           const fileName = config?.file || "";
 
-          // 【空槽位檢查】
           if (!config || !fileName || config.name === "EMPTY") {
               preloadedAudios[key] = null;
               loadedCount++;
@@ -725,7 +729,6 @@
       const pad = padElements[key];
       if (!pad) return;
 
-      // 【空按鍵保護】
       if (pad.classList.contains('empty')) {
         return; 
       }
@@ -746,10 +749,30 @@
       if (!sourceAudio || !sourceAudio.src) { triggerVisualError(pad); return; }
 
       const audio = sourceAudio.cloneNode();
-      audio.volume = appState.volume;
+      audio.volume = 1.0; 
       audio.playbackRate = appState.playbackRate;
       audio.loop = (appState.mode === "loop");
       audio._padKey = key;
+      
+      try {
+        if (audioCtx && audioCtx.state === 'running') {
+            const source = audioCtx.createMediaElementSource(audio);
+            const gainNode = audioCtx.createGain();
+            
+            gainNode.gain.value = appState.volume;
+            
+            // 【關鍵修正】保存 GainNode 引用，以便在播放途中調整音量
+            audio._gainNode = gainNode;
+
+            source.connect(gainNode).connect(audioCtx.destination);
+        } else {
+             audio.volume = Math.min(appState.volume, 1.0);
+        }
+      } catch (e) {
+         console.warn("Web Audio API Error:", e);
+         audio.volume = Math.min(appState.volume, 1.0);
+      }
+
       runningSounds.add(audio);
 
       audio.onended = () => {
@@ -857,7 +880,6 @@
           labelEl.textContent = file.name.replace(/\.\w+$/, '');
           labelEl.style.color = "#00f3ff";
           pad.style.borderColor = "#00f3ff";
-          // 【拖曳後移除 EMPTY 狀態】
           pad.classList.remove('empty');
           
           setTimeout(() => pad.style.borderColor = "rgba(255,255,255,0.1)", 500);
@@ -873,7 +895,6 @@
       pad.className = "pad";
       const label = getPadLabel(key, idx);
       
-      // 【初始化時檢查 EMPTY 狀態】
       if (label === "EMPTY") {
         pad.classList.add('empty');
       }
@@ -902,23 +923,37 @@
       let v = parseInt(val);
       if (isNaN(v)) v = 80;
       if (v < 0) v = 0;
-      if (v > 100) v = 100;
+      if (v > 200) v = 200;
+      
       appState.volume = v / 100;
+      
       document.getElementById('volume').value = v;
       document.getElementById('vol-input').value = v;
-      runningSounds.forEach(audio => audio.volume = appState.volume);
+      
+      // 【修正】確保同時更新 Web Audio (GainNode) 和 Fallback 音量
+      runningSounds.forEach(audio => {
+         if (audio._gainNode) {
+            audio._gainNode.gain.value = appState.volume;
+         } else {
+            audio.volume = Math.min(appState.volume, 1.0);
+         }
+      });
       saveSettings();
     }
 
     function updatePitch(val) {
       let p = parseFloat(val);
       if (isNaN(p)) p = 1.0;
-      if (p < 0.5) p = 0.5;
+      if (p < 0.1) p = 0.1;
       if (p > 2.0) p = 2.0;
+      
       p = parseFloat(p.toFixed(1));
+
       appState.playbackRate = p;
+      
       document.getElementById('pitch').value = p;
       document.getElementById('pitch-val').textContent = p + "x";
+      
       runningSounds.forEach(audio => audio.playbackRate = appState.playbackRate);
       saveSettings();
     }
@@ -942,11 +977,14 @@
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.onclick = () => {
         const newMode = btn.dataset.mode;
+        
         if (appState.mode !== newMode) {
            stopAllPads();
            appState.mode = newMode;
+           
            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
            btn.classList.add('active');
+           
            saveSettings();
         }
       };
@@ -956,9 +994,11 @@
       if (!isInitialized) return;
       if (e.isComposing || e.keyCode === 229) return;
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
       const key = e.key.toUpperCase();
       if (pressedKeys.has(key)) return;
       pressedKeys.add(key);
+
       if (PAD_KEYS.includes(key)) {
         e.preventDefault();
         (e.ctrlKey || e.metaKey) ? stopPad(key) : playPad(key); 
@@ -973,6 +1013,7 @@
 
     window.addEventListener('beforeunload', () => {
       Object.values(blobUrls).forEach(url => URL.revokeObjectURL(url));
+      if (audioCtx) audioCtx.close();
     });
 
     const overlay = document.getElementById('startOverlay');
@@ -986,12 +1027,16 @@
       initParticles();
       autoSpotlightLoop();
 
-      const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-      silentAudio.play().then(() => {
-        console.log("✅ AUDIO SYSTEM ONLINE");
-      }).catch(e => {
-        console.warn("⚠️ AUDIO UNLOCK FAILED:", e);
-      });
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+
+      const buffer = audioCtx.createBuffer(1, 1, 22050);
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      source.start(0);
+
+      console.log("✅ AUDIO ENGINE INITIALIZED");
     };
 
     loadSettings();
